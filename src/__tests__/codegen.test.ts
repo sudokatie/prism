@@ -1,6 +1,7 @@
 import { UVNode, TimeNode, MouseNode, ResolutionNode } from '../components/nodes/InputNodes';
 import { AddNode, MultiplyNode, SinNode, CosNode, MixNode, SmoothstepNode, StepNode, FractNode } from '../components/nodes/MathNodes';
 import { NoiseNode, CircleNode, CheckerNode, GradientNode } from '../components/nodes/PatternNodes';
+import { RGBNode, HSVToRGBNode, BlendNode } from '../components/nodes/ColorNodes';
 
 describe('Input Nodes', () => {
   describe('UVNode', () => {
@@ -233,6 +234,51 @@ describe('Pattern Nodes', () => {
     it('should generate radial gradient', () => {
       const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'radial' });
       expect(code.value).toContain('length');
+    });
+  });
+});
+
+describe('Color Nodes', () => {
+  describe('RGBNode', () => {
+    it('should have correct metadata', () => {
+      expect(RGBNode.type).toBe('color_rgb');
+      expect(RGBNode.category).toBe('color');
+      expect(RGBNode.inputs).toHaveLength(3);
+      expect(RGBNode.outputs).toHaveLength(1);
+    });
+
+    it('should generate correct code', () => {
+      const code = RGBNode.generateCode({ r: '0.5', g: '0.7', b: '0.9' }, {});
+      expect(code.color).toBe('vec3(0.5, 0.7, 0.9)');
+    });
+  });
+
+  describe('HSVToRGBNode', () => {
+    it('should have helper function', () => {
+      expect(HSVToRGBNode.helpers).toContain('hsv2rgb');
+    });
+
+    it('should generate correct code', () => {
+      const code = HSVToRGBNode.generateCode({ h: '0.5', s: '1.0', v: '1.0' }, {});
+      expect(code.color).toContain('hsv2rgb');
+      expect(code.color).toContain('vec3(0.5, 1.0, 1.0)');
+    });
+  });
+
+  describe('BlendNode', () => {
+    it('should generate mix blend', () => {
+      const code = BlendNode.generateCode({ color1: 'c1', color2: 'c2', factor: '0.5' }, { mode: 'mix' });
+      expect(code.color).toBe('mix(c1, c2, 0.5)');
+    });
+
+    it('should generate add blend', () => {
+      const code = BlendNode.generateCode({ color1: 'c1', color2: 'c2', factor: '0.5' }, { mode: 'add' });
+      expect(code.color).toContain('+');
+    });
+
+    it('should generate multiply blend', () => {
+      const code = BlendNode.generateCode({ color1: 'c1', color2: 'c2', factor: '0.5' }, { mode: 'multiply' });
+      expect(code.color).toContain('*');
     });
   });
 });
