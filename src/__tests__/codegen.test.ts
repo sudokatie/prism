@@ -1,5 +1,6 @@
 import { UVNode, TimeNode, MouseNode, ResolutionNode } from '../components/nodes/InputNodes';
 import { AddNode, MultiplyNode, SinNode, CosNode, MixNode, SmoothstepNode, StepNode, FractNode } from '../components/nodes/MathNodes';
+import { NoiseNode, CircleNode, CheckerNode, GradientNode } from '../components/nodes/PatternNodes';
 
 describe('Input Nodes', () => {
   describe('UVNode', () => {
@@ -171,6 +172,67 @@ describe('Math Nodes', () => {
     it('should generate correct code', () => {
       const code = FractNode.generateCode({ x: 'val' }, {});
       expect(code.result).toBe('fract(val)');
+    });
+  });
+});
+
+describe('Pattern Nodes', () => {
+  describe('NoiseNode', () => {
+    it('should have correct metadata', () => {
+      expect(NoiseNode.type).toBe('pattern_noise');
+      expect(NoiseNode.category).toBe('pattern');
+      expect(NoiseNode.helpers).toContain('snoise');
+    });
+
+    it('should generate code with default params', () => {
+      const code = NoiseNode.generateCode({ uv: 'coords' }, {});
+      expect(code.value).toContain('snoise');
+      expect(code.value).toContain('coords');
+    });
+
+    it('should generate fbm for multiple octaves', () => {
+      const code = NoiseNode.generateCode({ uv: 'coords' }, { octaves: 3 });
+      expect(code.value).toContain('fbm');
+    });
+  });
+
+  describe('CircleNode', () => {
+    it('should have correct metadata', () => {
+      expect(CircleNode.type).toBe('pattern_circle');
+      expect(CircleNode.category).toBe('pattern');
+      expect(CircleNode.outputs).toHaveLength(2);
+    });
+
+    it('should generate correct code', () => {
+      const code = CircleNode.generateCode({ uv: 'coords' }, { radius: 0.5, center: [0.5, 0.5] });
+      expect(code.distance).toContain('length');
+      expect(code.value).toContain('smoothstep');
+    });
+  });
+
+  describe('CheckerNode', () => {
+    it('should generate correct code', () => {
+      const code = CheckerNode.generateCode({ uv: 'coords' }, { scale: 10 });
+      expect(code.value).toContain('mod');
+      expect(code.value).toContain('floor');
+      expect(code.value).toContain('10.0000');
+    });
+  });
+
+  describe('GradientNode', () => {
+    it('should generate horizontal gradient', () => {
+      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'horizontal' });
+      expect(code.value).toBe('coords.x');
+    });
+
+    it('should generate vertical gradient', () => {
+      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'vertical' });
+      expect(code.value).toBe('coords.y');
+    });
+
+    it('should generate radial gradient', () => {
+      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'radial' });
+      expect(code.value).toContain('length');
     });
   });
 });
