@@ -1,4 +1,5 @@
 import { UVNode, TimeNode, MouseNode, ResolutionNode } from '../components/nodes/InputNodes';
+import { AddNode, MultiplyNode, SinNode, CosNode, MixNode, SmoothstepNode, StepNode, FractNode } from '../components/nodes/MathNodes';
 
 describe('Input Nodes', () => {
   describe('UVNode', () => {
@@ -100,6 +101,76 @@ describe('Input Nodes', () => {
       expect(ResolutionNode.outputs[1]).toEqual({ name: 'width', type: 'float' });
       expect(ResolutionNode.outputs[2]).toEqual({ name: 'height', type: 'float' });
       expect(ResolutionNode.outputs[3]).toEqual({ name: 'aspect', type: 'float' });
+    });
+  });
+});
+
+describe('Math Nodes', () => {
+  describe('AddNode', () => {
+    it('should have correct metadata', () => {
+      expect(AddNode.type).toBe('math_add');
+      expect(AddNode.category).toBe('math');
+      expect(AddNode.inputs).toHaveLength(2);
+      expect(AddNode.outputs).toHaveLength(1);
+    });
+
+    it('should generate correct code', () => {
+      const code = AddNode.generateCode({ a: 'x', b: 'y' }, {});
+      expect(code.result).toBe('(x + y)');
+    });
+
+    it('should use defaults for missing inputs', () => {
+      const code = AddNode.generateCode({}, {});
+      expect(code.result).toBe('(0.0 + 0.0)');
+    });
+  });
+
+  describe('MultiplyNode', () => {
+    it('should generate correct code', () => {
+      const code = MultiplyNode.generateCode({ a: '2.0', b: '3.0' }, {});
+      expect(code.result).toBe('(2.0 * 3.0)');
+    });
+  });
+
+  describe('SinNode', () => {
+    it('should generate correct code', () => {
+      const code = SinNode.generateCode({ x: 'angle' }, {});
+      expect(code.result).toBe('sin(angle)');
+    });
+  });
+
+  describe('CosNode', () => {
+    it('should generate correct code', () => {
+      const code = CosNode.generateCode({ x: 'angle' }, {});
+      expect(code.result).toBe('cos(angle)');
+    });
+  });
+
+  describe('MixNode', () => {
+    it('should generate correct code', () => {
+      const code = MixNode.generateCode({ a: 'color1', b: 'color2', t: '0.5' }, {});
+      expect(code.result).toBe('mix(color1, color2, 0.5)');
+    });
+  });
+
+  describe('SmoothstepNode', () => {
+    it('should generate correct code', () => {
+      const code = SmoothstepNode.generateCode({ edge0: '0.0', edge1: '1.0', x: 'val' }, {});
+      expect(code.result).toBe('smoothstep(0.0, 1.0, val)');
+    });
+  });
+
+  describe('StepNode', () => {
+    it('should generate correct code', () => {
+      const code = StepNode.generateCode({ edge: '0.5', x: 'val' }, {});
+      expect(code.result).toBe('step(0.5, val)');
+    });
+  });
+
+  describe('FractNode', () => {
+    it('should generate correct code', () => {
+      const code = FractNode.generateCode({ x: 'val' }, {});
+      expect(code.result).toBe('fract(val)');
     });
   });
 });
