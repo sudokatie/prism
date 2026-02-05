@@ -2,6 +2,7 @@ import { UVNode, TimeNode, MouseNode, ResolutionNode } from '../components/nodes
 import { AddNode, MultiplyNode, SinNode, CosNode, MixNode, SmoothstepNode, StepNode, FractNode } from '../components/nodes/MathNodes';
 import { NoiseNode, CircleNode, CheckerNode, GradientNode } from '../components/nodes/PatternNodes';
 import { RGBNode, HSVToRGBNode, BlendNode } from '../components/nodes/ColorNodes';
+import { OutputNode } from '../components/nodes/OutputNode';
 
 describe('Input Nodes', () => {
   describe('UVNode', () => {
@@ -279,6 +280,34 @@ describe('Color Nodes', () => {
     it('should generate multiply blend', () => {
       const code = BlendNode.generateCode({ color1: 'c1', color2: 'c2', factor: '0.5' }, { mode: 'multiply' });
       expect(code.color).toContain('*');
+    });
+  });
+});
+
+
+describe("Output Node", () => {
+  describe("OutputNode", () => {
+    it("should have correct metadata", () => {
+      expect(OutputNode.type).toBe("output");
+      expect(OutputNode.label).toBe("Output");
+      expect(OutputNode.category).toBe("output");
+      expect(OutputNode.inputs).toHaveLength(2);
+      expect(OutputNode.outputs).toHaveLength(0);
+    });
+
+    it("should generate correct code with color input", () => {
+      const code = OutputNode.generateCode({ color: "finalColor", alpha: "1.0" }, {});
+      expect(code.__fragColor).toBe("vec4(finalColor, 1.0)");
+    });
+
+    it("should use defaults for missing inputs", () => {
+      const code = OutputNode.generateCode({}, {});
+      expect(code.__fragColor).toBe("vec4(vec3(0.0), 1.0)");
+    });
+
+    it("should handle custom alpha", () => {
+      const code = OutputNode.generateCode({ color: "c", alpha: "0.5" }, {});
+      expect(code.__fragColor).toBe("vec4(c, 0.5)");
     });
   });
 });
