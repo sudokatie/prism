@@ -1,5 +1,4 @@
 // Prism type definitions
-// TODO: Implement in Task 2
 
 export type PortType = 'float' | 'vec2' | 'vec3' | 'vec4';
 
@@ -49,4 +48,104 @@ export interface Project {
   name: string;
   nodes: NodeInstance[];
   edges: Edge[];
+}
+
+// Type guards
+export function isPortType(value: unknown): value is PortType {
+  return value === 'float' || value === 'vec2' || value === 'vec3' || value === 'vec4';
+}
+
+export function isPortDef(value: unknown): value is PortDef {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return typeof obj.name === 'string' && isPortType(obj.type);
+}
+
+export function isParamDef(value: unknown): value is ParamDef {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  const validTypes = ['float', 'vec2', 'vec3', 'vec4', 'color', 'select'];
+  return typeof obj.name === 'string' && validTypes.includes(obj.type as string);
+}
+
+export function isNodeInstance(value: unknown): value is NodeInstance {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.type === 'string' &&
+    typeof obj.position === 'object' &&
+    obj.position !== null &&
+    typeof (obj.position as { x?: unknown }).x === 'number' &&
+    typeof (obj.position as { y?: unknown }).y === 'number'
+  );
+}
+
+export function isEdge(value: unknown): value is Edge {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.source === 'string' &&
+    typeof obj.sourceHandle === 'string' &&
+    typeof obj.target === 'string' &&
+    typeof obj.targetHandle === 'string'
+  );
+}
+
+export function isProject(value: unknown): value is Project {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.version === 'string' &&
+    typeof obj.name === 'string' &&
+    Array.isArray(obj.nodes) &&
+    Array.isArray(obj.edges)
+  );
+}
+
+// Default value helpers
+export function getPortDefaultValue(type: PortType): number | number[] {
+  switch (type) {
+    case 'float': return 0;
+    case 'vec2': return [0, 0];
+    case 'vec3': return [0, 0, 0];
+    case 'vec4': return [0, 0, 0, 1];
+  }
+}
+
+export function getPortComponentCount(type: PortType): number {
+  switch (type) {
+    case 'float': return 1;
+    case 'vec2': return 2;
+    case 'vec3': return 3;
+    case 'vec4': return 4;
+  }
+}
+
+// Project validation
+export function validateProject(project: unknown): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!isProject(project)) {
+    return { valid: false, errors: ['Invalid project structure'] };
+  }
+
+  if (project.version !== '1.0') {
+    errors.push(`Unknown version: ${project.version}`);
+  }
+
+  for (let i = 0; i < project.nodes.length; i++) {
+    if (!isNodeInstance(project.nodes[i])) {
+      errors.push(`Invalid node at index ${i}`);
+    }
+  }
+
+  for (let i = 0; i < project.edges.length; i++) {
+    if (!isEdge(project.edges[i])) {
+      errors.push(`Invalid edge at index ${i}`);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
 }
