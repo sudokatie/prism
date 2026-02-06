@@ -1,101 +1,127 @@
-import Image from "next/image";
+'use client';
+
+/**
+ * Prism - Visual Shader Editor
+ * Main application page
+ */
+import { useEffect, useCallback } from 'react';
+import { Toolbar } from '@/components/Toolbar';
+import { NodePalette } from '@/components/NodePalette';
+import { Canvas } from '@/components/Canvas';
+import { Preview } from '@/components/Preview';
+import { PropertiesPanel } from '@/components/PropertiesPanel';
+import { usePrismStore } from '@/lib/store';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { removeNode, selectedNodeId, selectNode } = usePrismStore();
+  const addNode = usePrismStore((state) => state.addNode);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Delete selected node
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeId) {
+        // Don't delete if focused on input
+        if ((e.target as HTMLElement).tagName === 'INPUT') return;
+        removeNode(selectedNodeId);
+        e.preventDefault();
+      }
+
+      // Duplicate selected node (Cmd/Ctrl + D)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && selectedNodeId) {
+        e.preventDefault();
+        const node = usePrismStore.getState().nodes.find((n) => n.id === selectedNodeId);
+        if (node) {
+          const newId = usePrismStore.getState().addNode(node.type, {
+            x: node.position.x + 50,
+            y: node.position.y + 50,
+          });
+          // Copy params
+          Object.entries(node.params).forEach(([key, value]) => {
+            usePrismStore.getState().updateNodeParam(newId, key, value);
+          });
+          selectNode(newId);
+        }
+      }
+
+      // Save project (Cmd/Ctrl + S)
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        const project = usePrismStore.getState().getProject();
+        const json = JSON.stringify(project, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${project.name}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        usePrismStore.getState().setModified(false);
+      }
+
+      // Escape to deselect
+      if (e.key === 'Escape') {
+        selectNode(null);
+      }
+    },
+    [selectedNodeId, removeNode, selectNode]
+  );
+
+  // Register keyboard listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Handle drag and drop from palette
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const nodeType = e.dataTransfer.getData('application/prism-node');
+      if (nodeType) {
+        // Calculate drop position relative to canvas
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        addNode(nodeType, { x, y });
+      }
+    },
+    [addNode]
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-900 overflow-hidden">
+      {/* Top Toolbar */}
+      <Toolbar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left: Node Palette */}
+        <NodePalette />
+
+        {/* Center: Canvas + Properties */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Canvas */}
+          <div
+            className="flex-1 relative"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <Canvas />
+          </div>
+
+          {/* Bottom: Properties Panel */}
+          <PropertiesPanel />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Right: Preview */}
+        <Preview width={350} height={350} />
+      </div>
     </div>
   );
 }

@@ -124,7 +124,7 @@ export function Toolbar() {
         try {
           const project = JSON.parse(e.target?.result as string);
           usePrismStore.getState().loadProject(project);
-        } catch (err) {
+        } catch {
           alert('Invalid project file');
         }
       };

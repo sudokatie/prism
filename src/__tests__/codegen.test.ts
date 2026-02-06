@@ -314,7 +314,7 @@ describe("Output Node", () => {
 
 // Code Generator Tests
 import { topologicalSort, inferTypes, canConnect, getConversion, generateGLSL } from '../lib/codegen';
-import type { NodeInstance, Edge, PortType } from '../lib/types';
+import type { NodeInstance, Edge } from '../lib/types';
 
 describe('Code Generator', () => {
   describe('topologicalSort', () => {

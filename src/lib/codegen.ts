@@ -1,6 +1,6 @@
 // Prism GLSL code generator
 
-import type { NodeInstance, Edge, PortType, NodeDef } from './types';
+import type { NodeInstance, Edge, PortType } from './types';
 import { getPortDefaultValue } from './types';
 import { getNodeDef } from '@/components/nodes';
 import { getHelper } from './noise';
@@ -75,7 +75,7 @@ export function topologicalSort(nodes: NodeInstance[], edges: Edge[]): NodeInsta
 /**
  * Infer output types for all node outputs based on connections.
  */
-export function inferTypes(nodes: NodeInstance[], edges: Edge[]): Map<string, PortType> {
+export function inferTypes(nodes: NodeInstance[], _edges: Edge[]): Map<string, PortType> {
   const types = new Map<string, PortType>();
   
   // Get node definitions and set output types

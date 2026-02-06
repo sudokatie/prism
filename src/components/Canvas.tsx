@@ -14,8 +14,6 @@ import ReactFlow, {
   OnConnect,
   OnNodesChange,
   OnEdgesChange,
-  applyNodeChanges,
-  applyEdgeChanges,
   NodeChange,
   EdgeChange,
   ReactFlowProvider,

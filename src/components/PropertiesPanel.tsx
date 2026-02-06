@@ -113,11 +113,16 @@ function SelectInput({ param, value, onChange }: SelectInputProps) {
         text-white text-sm focus:outline-none focus:border-blue-500
       "
     >
-      {param.options?.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
+      {param.options?.map((option) => {
+        // Handle both string options and {label, value} objects
+        const optValue = typeof option === 'string' ? option : (option as { value: string }).value;
+        const optLabel = typeof option === 'string' ? option : (option as { label: string }).label;
+        return (
+          <option key={optValue} value={optValue}>
+            {optLabel}
+          </option>
+        );
+      })}
     </select>
   );
 }

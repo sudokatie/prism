@@ -19,8 +19,8 @@ export const NoiseNode: NodeDef = {
   ],
   helpers: ['snoise'],
   generateCode: (inputs, params) => {
-    const scale = params.scale ?? 5.0;
-    const octaves = Math.floor(params.octaves ?? 1);
+    const scale = (params.scale as number) ?? 5.0;
+    const octaves = Math.floor((params.octaves as number) ?? 1);
     const uv = inputs.uv ?? 'v_uv';
     
     if (octaves <= 1) {
@@ -55,9 +55,9 @@ export const CircleNode: NodeDef = {
   ],
   generateCode: (inputs, params) => {
     const uv = inputs.uv ?? 'v_uv';
-    const radius = params.radius ?? 0.3;
-    const center = params.center ?? [0.5, 0.5];
-    const softness = params.softness ?? 0.01;
+    const radius = (params.radius as number) ?? 0.3;
+    const center = (params.center as number[]) ?? [0.5, 0.5];
+    const softness = (params.softness as number) ?? 0.01;
     
     const centerVec = `vec2(${center[0].toFixed(4)}, ${center[1].toFixed(4)})`;
     const distExpr = `length(${uv} - ${centerVec})`;
@@ -85,7 +85,7 @@ export const CheckerNode: NodeDef = {
   ],
   generateCode: (inputs, params) => {
     const uv = inputs.uv ?? 'v_uv';
-    const scale = params.scale ?? 8.0;
+    const scale = (params.scale as number) ?? 8.0;
     
     return {
       value: `mod(floor(${uv}.x * ${scale.toFixed(4)}) + floor(${uv}.y * ${scale.toFixed(4)}), 2.0)`,
@@ -114,7 +114,7 @@ export const GradientNode: NodeDef = {
   ],
   generateCode: (inputs, params) => {
     const uv = inputs.uv ?? 'v_uv';
-    const direction = params.direction ?? 'horizontal';
+    const direction = (params.direction as string) ?? 'horizontal';
     
     switch (direction) {
       case 'vertical':

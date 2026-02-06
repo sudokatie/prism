@@ -5,7 +5,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCompiler } from '@/hooks/useCompiler';
 import { useRenderer } from '@/hooks/useRenderer';
 import { usePrismStore } from '@/lib/store';
-import { createRef, RefObject } from 'react';
+import { RefObject } from 'react';
 
 // Mock WebGL context
 class MockWebGL2RenderingContext {

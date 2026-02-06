@@ -25,9 +25,7 @@ export interface BaseNodeData {
   params: Record<string, unknown>;
 }
 
-interface BaseNodeProps extends NodeProps<BaseNodeData> {
-  selected?: boolean;
-}
+type BaseNodeProps = NodeProps<BaseNodeData>;
 
 /**
  * Base node component used by all node types

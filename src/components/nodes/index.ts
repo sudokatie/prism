@@ -57,7 +57,20 @@ export function getNodeDef(type: string): NodeDef | undefined {
 /**
  * Get all nodes in a specific category.
  */
-export function getNodesByCategory(category: string): NodeDef[] {
+export function getNodesByCategory(): Record<string, NodeDef[]>;
+export function getNodesByCategory(category: string): NodeDef[];
+export function getNodesByCategory(category?: string): NodeDef[] | Record<string, NodeDef[]> {
+  if (category === undefined) {
+    // Return all nodes grouped by category
+    const grouped: Record<string, NodeDef[]> = {};
+    allNodes.forEach(node => {
+      if (!grouped[node.category]) {
+        grouped[node.category] = [];
+      }
+      grouped[node.category].push(node);
+    });
+    return grouped;
+  }
   return allNodes.filter(node => node.category === category);
 }
 

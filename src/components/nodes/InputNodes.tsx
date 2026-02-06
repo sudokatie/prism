@@ -36,7 +36,7 @@ export const TimeNode: NodeDef = {
     { name: 'speed', type: 'float', default: 1.0, min: 0.0, max: 10.0 },
   ],
   generateCode: (_inputs, params) => {
-    const speed = params.speed ?? 1.0;
+    const speed = (params.speed as number) ?? 1.0;
     const timeExpr = speed === 1.0 ? 'u_time' : `(u_time * ${speed.toFixed(4)})`;
     return {
       time: timeExpr,
