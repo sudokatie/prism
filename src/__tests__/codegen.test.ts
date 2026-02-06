@@ -311,3 +311,205 @@ describe("Output Node", () => {
     });
   });
 });
+
+// Code Generator Tests
+import { topologicalSort, inferTypes, canConnect, getConversion, generateGLSL } from '../lib/codegen';
+import type { NodeInstance, Edge, PortType } from '../lib/types';
+
+describe('Code Generator', () => {
+  describe('topologicalSort', () => {
+    it('should return nodes in dependency order', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'b', type: 'math_sin', position: { x: 100, y: 0 }, params: {} },
+        { id: 'c', type: 'output', position: { x: 200, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'a', sourceHandle: 'x', target: 'b', targetHandle: 'x' },
+        { id: 'e2', source: 'b', sourceHandle: 'result', target: 'c', targetHandle: 'color' },
+      ];
+      
+      const sorted = topologicalSort(nodes, edges);
+      expect(sorted).not.toBeNull();
+      expect(sorted!.length).toBe(3);
+      
+      // a should come before b, b should come before c
+      const aIdx = sorted!.findIndex(n => n.id === 'a');
+      const bIdx = sorted!.findIndex(n => n.id === 'b');
+      const cIdx = sorted!.findIndex(n => n.id === 'c');
+      expect(aIdx).toBeLessThan(bIdx);
+      expect(bIdx).toBeLessThan(cIdx);
+    });
+
+    it('should detect cycles', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'math_add', position: { x: 0, y: 0 }, params: {} },
+        { id: 'b', type: 'math_add', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'a', sourceHandle: 'result', target: 'b', targetHandle: 'a' },
+        { id: 'e2', source: 'b', sourceHandle: 'result', target: 'a', targetHandle: 'a' },
+      ];
+      
+      const sorted = topologicalSort(nodes, edges);
+      expect(sorted).toBeNull();
+    });
+
+    it('should handle nodes with no connections', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'b', type: 'input_time', position: { x: 0, y: 100 }, params: {} },
+      ];
+      const edges: Edge[] = [];
+      
+      const sorted = topologicalSort(nodes, edges);
+      expect(sorted).not.toBeNull();
+      expect(sorted!.length).toBe(2);
+    });
+  });
+
+  describe('canConnect', () => {
+    it('should allow same type connections', () => {
+      expect(canConnect('float', 'float')).toBe(true);
+      expect(canConnect('vec2', 'vec2')).toBe(true);
+      expect(canConnect('vec3', 'vec3')).toBe(true);
+      expect(canConnect('vec4', 'vec4')).toBe(true);
+    });
+
+    it('should allow float to any vector', () => {
+      expect(canConnect('float', 'vec2')).toBe(true);
+      expect(canConnect('float', 'vec3')).toBe(true);
+      expect(canConnect('float', 'vec4')).toBe(true);
+    });
+
+    it('should allow vec3 to vec4', () => {
+      expect(canConnect('vec3', 'vec4')).toBe(true);
+    });
+
+    it('should allow vec4 to vec3', () => {
+      expect(canConnect('vec4', 'vec3')).toBe(true);
+    });
+
+    it('should not allow vec2 to vec3', () => {
+      expect(canConnect('vec2', 'vec3')).toBe(false);
+    });
+  });
+
+  describe('getConversion', () => {
+    it('should return unchanged for same type', () => {
+      expect(getConversion('float', 'float', 'x')).toBe('x');
+      expect(getConversion('vec3', 'vec3', 'v')).toBe('v');
+    });
+
+    it('should expand float to vector', () => {
+      expect(getConversion('float', 'vec2', 'x')).toBe('vec2(x)');
+      expect(getConversion('float', 'vec3', 'x')).toBe('vec3(x)');
+      expect(getConversion('float', 'vec4', 'x')).toBe('vec4(vec3(x), 1.0)');
+    });
+
+    it('should add alpha for vec3 to vec4', () => {
+      expect(getConversion('vec3', 'vec4', 'c')).toBe('vec4(c, 1.0)');
+    });
+
+    it('should drop alpha for vec4 to vec3', () => {
+      expect(getConversion('vec4', 'vec3', 'c')).toBe('c.rgb');
+    });
+  });
+
+  describe('inferTypes', () => {
+    it('should return output types for all nodes', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'b', type: 'math_sin', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [];
+      
+      const types = inferTypes(nodes, edges);
+      expect(types.get('a.uv')).toBe('vec2');
+      expect(types.get('a.x')).toBe('float');
+      expect(types.get('b.result')).toBe('float');
+    });
+  });
+
+  describe('generateGLSL', () => {
+    it('should fail without output node', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateGLSL(nodes, []);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('output');
+    });
+
+    it('should generate simple shader with just output', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'out', type: 'output', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateGLSL(nodes, []);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('#version 300 es');
+      expect(result.code).toContain('fragColor');
+    });
+
+    it('should generate shader with connected nodes', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'rgb', type: 'color_rgb', position: { x: 100, y: 0 }, params: { r: 1.0, g: 0.5, b: 0.0 } },
+        { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'rgb', sourceHandle: 'rgb', target: 'out', targetHandle: 'color' },
+      ];
+      
+      const result = generateGLSL(nodes, edges);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('fragColor');
+    });
+
+    it('should fail on cycle', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'math_add', position: { x: 0, y: 0 }, params: {} },
+        { id: 'b', type: 'math_add', position: { x: 100, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'a', sourceHandle: 'result', target: 'b', targetHandle: 'a' },
+        { id: 'e2', source: 'b', sourceHandle: 'result', target: 'a', targetHandle: 'a' },
+      ];
+      
+      const result = generateGLSL(nodes, edges);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Cycle');
+    });
+
+    it('should use default values for unconnected inputs', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'add', type: 'math_add', position: { x: 0, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [];
+      
+      const result = generateGLSL(nodes, edges);
+      expect(result.success).toBe(true);
+      // Should use default float value (0.0)
+      expect(result.code).toContain('0.0');
+    });
+
+    it('should include helpers when needed', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'noise', type: 'pattern_noise', position: { x: 100, y: 0 }, params: { scale: 1.0 } },
+        { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'uv', sourceHandle: 'uv', target: 'noise', targetHandle: 'uv' },
+      ];
+      
+      const result = generateGLSL(nodes, edges);
+      expect(result.success).toBe(true);
+      expect(result.helpers).toBeDefined();
+    });
+  });
+});
