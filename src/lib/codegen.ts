@@ -3,6 +3,7 @@
 import type { NodeInstance, Edge, PortType, NodeDef } from './types';
 import { getPortDefaultValue } from './types';
 import { getNodeDef } from '@/components/nodes';
+import { getHelper } from './noise';
 
 export interface CodeGenResult {
   success: boolean;
@@ -277,7 +278,10 @@ export function generateGLSL(nodes: NodeInstance[], edges: Edge[]): CodeGenResul
   }
   
   // Build complete shader
-  const helpers = Array.from(helpersNeeded);
+  const helperNames = Array.from(helpersNeeded);
+  const resolvedHelpers = helperNames
+    .map(name => getHelper(name))
+    .filter((h): h is string => h !== undefined);
   
   const shader = `#version 300 es
 precision highp float;
@@ -288,7 +292,7 @@ uniform vec2 u_mouse;
 
 out vec4 fragColor;
 
-${helpers.join('\n\n')}
+${resolvedHelpers.join('\n\n')}
 
 void main() {
 ${lines.join('\n')}
@@ -297,6 +301,6 @@ ${lines.join('\n')}
   return {
     success: true,
     code: shader,
-    helpers,
+    helpers: helperNames,
   };
 }

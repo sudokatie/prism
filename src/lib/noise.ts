@@ -123,7 +123,8 @@ vec3 hsv2rgb(vec3 c) {
  */
 export function getHelper(name: string): string | undefined {
   switch (name) {
-    case 'noise2d': return NOISE_2D_HELPER;
+    case 'noise2d':
+    case 'snoise': return NOISE_2D_HELPER;
     case 'noise3d': return NOISE_3D_HELPER;
     case 'hsv2rgb': return HSV_TO_RGB_HELPER;
     default: return undefined;
