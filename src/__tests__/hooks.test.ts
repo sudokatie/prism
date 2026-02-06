@@ -3,7 +3,65 @@
  */
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCompiler } from '@/hooks/useCompiler';
+import { useRenderer } from '@/hooks/useRenderer';
 import { usePrismStore } from '@/lib/store';
+import { createRef, RefObject } from 'react';
+
+// Mock WebGL context
+class MockWebGL2RenderingContext {
+  canvas = { width: 800, height: 600 };
+  createShader() { return {}; }
+  shaderSource() {}
+  compileShader() {}
+  getShaderParameter() { return true; }
+  getShaderInfoLog() { return ''; }
+  deleteShader() {}
+  createProgram() { return {}; }
+  attachShader() {}
+  linkProgram() {}
+  getProgramParameter() { return true; }
+  getProgramInfoLog() { return ''; }
+  deleteProgram() {}
+  useProgram() {}
+  getUniformLocation() { return {}; }
+  uniform1f() {}
+  uniform2f() {}
+  createBuffer() { return {}; }
+  bindBuffer() {}
+  bufferData() {}
+  deleteBuffer() {}
+  createVertexArray() { return {}; }
+  bindVertexArray() {}
+  enableVertexAttribArray() {}
+  vertexAttribPointer() {}
+  deleteVertexArray() {}
+  viewport() {}
+  clearColor() {}
+  clear() {}
+  drawArrays() {}
+  VERTEX_SHADER = 0x8B31;
+  FRAGMENT_SHADER = 0x8B30;
+  COMPILE_STATUS = 0x8B81;
+  LINK_STATUS = 0x8B82;
+  ARRAY_BUFFER = 0x8892;
+  STATIC_DRAW = 0x88E4;
+  FLOAT = 0x1406;
+  TRIANGLES = 0x0004;
+  COLOR_BUFFER_BIT = 0x4000;
+}
+
+// Create mock canvas
+function createMockCanvas(): HTMLCanvasElement {
+  const mockGL = new MockWebGL2RenderingContext();
+  return {
+    getContext: (id: string) => id === 'webgl2' ? mockGL : null,
+    width: 800,
+    height: 600,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600 }),
+  } as unknown as HTMLCanvasElement;
+}
 
 // Reset store before each test
 beforeEach(() => {
@@ -128,5 +186,68 @@ describe('useCompiler', () => {
         result.current.compile();
       });
     }).not.toThrow();
+  });
+});
+
+describe('useRenderer', () => {
+  const SAMPLE_SHADER = `#version 300 es
+precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+out vec4 fragColor;
+void main() {
+  fragColor = vec4(1.0);
+}`;
+
+  it('should initialize renderer with canvas', () => {
+    const canvas = createMockCanvas();
+    const canvasRef = { current: canvas } as RefObject<HTMLCanvasElement>;
+
+    const { result } = renderHook(() => useRenderer(canvasRef, null));
+
+    // Should start playing by default
+    expect(result.current.isPlaying).toBe(true);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('should toggle playing state', () => {
+    const canvas = createMockCanvas();
+    const canvasRef = { current: canvas } as RefObject<HTMLCanvasElement>;
+
+    const { result } = renderHook(() => useRenderer(canvasRef, SAMPLE_SHADER));
+
+    expect(result.current.isPlaying).toBe(true);
+
+    act(() => {
+      result.current.setPlaying(false);
+    });
+
+    expect(result.current.isPlaying).toBe(false);
+
+    act(() => {
+      result.current.setPlaying(true);
+    });
+
+    expect(result.current.isPlaying).toBe(true);
+  });
+
+  it('should recompile when code changes', () => {
+    const canvas = createMockCanvas();
+    const canvasRef = { current: canvas } as RefObject<HTMLCanvasElement>;
+
+    const { result, rerender } = renderHook(
+      ({ code }) => useRenderer(canvasRef, code),
+      { initialProps: { code: SAMPLE_SHADER } }
+    );
+
+    expect(result.current.error).toBeNull();
+
+    // Change shader code
+    const newShader = SAMPLE_SHADER.replace('vec4(1.0)', 'vec4(0.5)');
+    rerender({ code: newShader });
+
+    // Should still have no error (valid shader)
+    expect(result.current.error).toBeNull();
   });
 });
