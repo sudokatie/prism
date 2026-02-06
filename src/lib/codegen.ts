@@ -294,6 +294,8 @@ out vec4 fragColor;
 ${resolvedHelpers.join('\n\n')}
 
 void main() {
+  vec2 v_uv = gl_FragCoord.xy / u_resolution;
+
 ${lines.join('\n')}
 }`;
   

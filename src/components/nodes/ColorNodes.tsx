@@ -2,23 +2,24 @@
 
 import type { NodeDef } from '@/lib/types';
 
-// RGB Node - creates a color from RGB components
+// RGB Node - constant color output with color picker parameter
 export const RGBNode: NodeDef = {
   type: 'color_rgb',
   label: 'RGB',
   category: 'color',
-  inputs: [
-    { name: 'r', type: 'float', default: 1 },
-    { name: 'g', type: 'float', default: 1 },
-    { name: 'b', type: 'float', default: 1 },
-  ],
+  inputs: [],
   outputs: [
     { name: 'color', type: 'vec3' },
   ],
-  params: [],
-  generateCode: (inputs) => ({
-    color: `vec3(${inputs.r ?? '1.0'}, ${inputs.g ?? '1.0'}, ${inputs.b ?? '1.0'})`,
-  }),
+  params: [
+    { name: 'color', type: 'color', default: [1, 1, 1] },
+  ],
+  generateCode: (_inputs, params) => {
+    const color = (params.color as number[]) ?? [1, 1, 1];
+    return {
+      color: `vec3(${color[0].toFixed(4)}, ${color[1].toFixed(4)}, ${color[2].toFixed(4)})`,
+    };
+  },
 };
 
 // HSV to RGB Node - converts HSV to RGB

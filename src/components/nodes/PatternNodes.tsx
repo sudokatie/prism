@@ -93,16 +93,19 @@ export const CheckerNode: NodeDef = {
   },
 };
 
-// Gradient Node - linear gradient
+// Gradient Node - linear gradient between two colors
 export const GradientNode: NodeDef = {
   type: 'pattern_gradient',
   label: 'Gradient',
   category: 'pattern',
   inputs: [
     { name: 'uv', type: 'vec2' },
+    { name: 'color1', type: 'vec3', default: [0, 0, 0] },
+    { name: 'color2', type: 'vec3', default: [1, 1, 1] },
   ],
   outputs: [
-    { name: 'value', type: 'float' },
+    { name: 'color', type: 'vec3' },
+    { name: 'factor', type: 'float' },
   ],
   params: [
     { name: 'direction', type: 'select', default: 'horizontal', options: [
@@ -114,19 +117,30 @@ export const GradientNode: NodeDef = {
   ],
   generateCode: (inputs, params) => {
     const uv = inputs.uv ?? 'v_uv';
+    const c1 = inputs.color1 ?? 'vec3(0.0)';
+    const c2 = inputs.color2 ?? 'vec3(1.0)';
     const direction = (params.direction as string) ?? 'horizontal';
     
+    let factor: string;
     switch (direction) {
       case 'vertical':
-        return { value: `${uv}.y` };
+        factor = `${uv}.y`;
+        break;
       case 'diagonal':
-        return { value: `(${uv}.x + ${uv}.y) * 0.5` };
+        factor = `(${uv}.x + ${uv}.y) * 0.5`;
+        break;
       case 'radial':
-        return { value: `length(${uv} - vec2(0.5))` };
+        factor = `length(${uv} - vec2(0.5)) * 2.0`;
+        break;
       case 'horizontal':
       default:
-        return { value: `${uv}.x` };
+        factor = `${uv}.x`;
     }
+    
+    return {
+      factor: factor,
+      color: `mix(${c1}, ${c2}, clamp(${factor}, 0.0, 1.0))`,
+    };
   },
 };
 

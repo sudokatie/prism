@@ -222,19 +222,29 @@ describe('Pattern Nodes', () => {
   });
 
   describe('GradientNode', () => {
+    it('should have correct inputs and outputs', () => {
+      expect(GradientNode.inputs).toHaveLength(3);
+      expect(GradientNode.inputs[0].name).toBe('uv');
+      expect(GradientNode.inputs[1].name).toBe('color1');
+      expect(GradientNode.inputs[2].name).toBe('color2');
+      expect(GradientNode.outputs).toHaveLength(2);
+      expect(GradientNode.outputs[0].type).toBe('vec3');
+    });
+
     it('should generate horizontal gradient', () => {
-      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'horizontal' });
-      expect(code.value).toBe('coords.x');
+      const code = GradientNode.generateCode({ uv: 'coords', color1: 'c1', color2: 'c2' }, { direction: 'horizontal' });
+      expect(code.factor).toBe('coords.x');
+      expect(code.color).toContain('mix');
     });
 
     it('should generate vertical gradient', () => {
-      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'vertical' });
-      expect(code.value).toBe('coords.y');
+      const code = GradientNode.generateCode({ uv: 'coords', color1: 'c1', color2: 'c2' }, { direction: 'vertical' });
+      expect(code.factor).toBe('coords.y');
     });
 
     it('should generate radial gradient', () => {
-      const code = GradientNode.generateCode({ uv: 'coords' }, { direction: 'radial' });
-      expect(code.value).toContain('length');
+      const code = GradientNode.generateCode({ uv: 'coords', color1: 'c1', color2: 'c2' }, { direction: 'radial' });
+      expect(code.factor).toContain('length');
     });
   });
 });
@@ -244,13 +254,24 @@ describe('Color Nodes', () => {
     it('should have correct metadata', () => {
       expect(RGBNode.type).toBe('color_rgb');
       expect(RGBNode.category).toBe('color');
-      expect(RGBNode.inputs).toHaveLength(3);
+      expect(RGBNode.inputs).toHaveLength(0);
       expect(RGBNode.outputs).toHaveLength(1);
+      expect(RGBNode.params).toHaveLength(1);
+      expect(RGBNode.params[0].type).toBe('color');
     });
 
-    it('should generate correct code', () => {
-      const code = RGBNode.generateCode({ r: '0.5', g: '0.7', b: '0.9' }, {});
-      expect(code.color).toBe('vec3(0.5, 0.7, 0.9)');
+    it('should generate correct code with color param', () => {
+      const code = RGBNode.generateCode({}, { color: [0.5, 0.7, 0.9] });
+      expect(code.color).toContain('vec3');
+      expect(code.color).toContain('0.5');
+      expect(code.color).toContain('0.7');
+      expect(code.color).toContain('0.9');
+    });
+
+    it('should use default white color', () => {
+      const code = RGBNode.generateCode({}, {});
+      expect(code.color).toContain('vec3');
+      expect(code.color).toContain('1.0');
     });
   });
 
@@ -458,7 +479,7 @@ describe('Code Generator', () => {
     it('should generate shader with connected nodes', () => {
       const nodes: NodeInstance[] = [
         { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
-        { id: 'rgb', type: 'color_rgb', position: { x: 100, y: 0 }, params: { r: 1.0, g: 0.5, b: 0.0 } },
+        { id: 'rgb', type: 'color_rgb', position: { x: 100, y: 0 }, params: { color: [1.0, 0.5, 0.0] } },
         { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
       ];
       const edges: Edge[] = [
@@ -469,6 +490,8 @@ describe('Code Generator', () => {
       expect(result.success).toBe(true);
       // Verify fragColor is assigned with the connected color
       expect(result.code).toMatch(/fragColor\s*=\s*vec4/);
+      // Verify v_uv is defined in main()
+      expect(result.code).toContain('vec2 v_uv = gl_FragCoord.xy / u_resolution');
     });
 
     it('should fail on cycle', () => {
