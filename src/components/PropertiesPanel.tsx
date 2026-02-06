@@ -3,7 +3,7 @@
 /**
  * PropertiesPanel - Parameter editor for selected node
  */
-import { useCallback } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { usePrismStore, selectSelectedNode } from '@/lib/store';
 import { getNodeDef } from '@/components/nodes';
 import type { ParamDef } from '@/lib/types';
@@ -16,31 +16,82 @@ interface FloatInputProps {
 
 /**
  * Float input with drag-to-adjust
+ * - Normal drag: 0.1 increment
+ * - Shift+drag: 0.01 increment (fine)
+ * - Ctrl+drag: 1.0 increment (coarse)
  */
 function FloatInput({ param, value, onChange }: FloatInputProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; startValue: number } | null>(null);
+
+  const clamp = useCallback((v: number) => {
+    return Math.max(param.min ?? -Infinity, Math.min(param.max ?? Infinity, v));
+  }, [param.min, param.max]);
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = parseFloat(e.target.value);
       if (!isNaN(v)) {
-        const clamped = Math.max(param.min ?? -Infinity, Math.min(param.max ?? Infinity, v));
-        onChange(clamped);
+        onChange(clamp(v));
       }
     },
-    [param, onChange]
+    [clamp, onChange]
   );
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only start drag on left click
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, startValue: value };
+    e.preventDefault();
+  }, [value]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      
+      const deltaX = e.clientX - dragStartRef.current.x;
+      
+      // Determine increment based on modifier keys
+      let increment = 0.1; // Normal
+      if (e.shiftKey) increment = 0.01; // Fine
+      if (e.ctrlKey || e.metaKey) increment = 1.0; // Coarse
+      
+      const newValue = dragStartRef.current.startValue + deltaX * increment;
+      onChange(clamp(newValue));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragStartRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, clamp, onChange]);
 
   return (
     <input
       type="number"
       value={value}
       onChange={handleChange}
+      onMouseDown={handleMouseDown}
       step={0.1}
       min={param.min}
       max={param.max}
-      className="
+      className={`
         w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded
         text-white text-sm focus:outline-none focus:border-blue-500
-      "
+        ${isDragging ? 'cursor-ew-resize' : 'cursor-text'}
+      `}
+      style={{ cursor: isDragging ? 'ew-resize' : undefined }}
     />
   );
 }

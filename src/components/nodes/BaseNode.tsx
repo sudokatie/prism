@@ -23,6 +23,7 @@ function getPortColor(type: PortType): string {
 export interface BaseNodeData {
   def: NodeDef;
   params: Record<string, unknown>;
+  hasError?: boolean;
 }
 
 type BaseNodeProps = NodeProps<BaseNodeData>;
@@ -31,14 +32,19 @@ type BaseNodeProps = NodeProps<BaseNodeData>;
  * Base node component used by all node types
  */
 function BaseNodeComponent({ data, selected }: BaseNodeProps) {
-  const { def, params } = data;
+  const { def, params, hasError } = data;
 
   return (
     <div
       className={`
         bg-gray-800 rounded-lg shadow-lg min-w-[140px]
         border-2 transition-colors
-        ${selected ? 'border-blue-400' : 'border-gray-600'}
+        ${hasError 
+          ? 'border-red-500 ring-2 ring-red-500/50' 
+          : selected 
+            ? 'border-blue-400' 
+            : 'border-gray-600'
+        }
       `}
     >
       {/* Header */}

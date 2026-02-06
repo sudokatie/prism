@@ -11,10 +11,12 @@ import { Canvas } from '@/components/Canvas';
 import { Preview } from '@/components/Preview';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { usePrismStore } from '@/lib/store';
+import { useCompiler } from '@/hooks/useCompiler';
 
 export default function Home() {
   const { removeNode, selectedNodeId, selectNode } = usePrismStore();
   const addNode = usePrismStore((state) => state.addNode);
+  const { errorNodeId } = useCompiler();
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -112,7 +114,7 @@ export default function Home() {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-            <Canvas />
+            <Canvas errorNodeId={errorNodeId} />
           </div>
 
           {/* Bottom: Properties Panel */}

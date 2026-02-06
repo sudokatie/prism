@@ -31,8 +31,12 @@ const nodeTypes: NodeTypes = {
   prism: BaseNode,
 };
 
+interface CanvasProps {
+  errorNodeId?: string | null;
+}
+
 // Convert Prism nodes to React Flow nodes
-function toFlowNodes(nodes: NodeInstance[]): Node<BaseNodeData>[] {
+function toFlowNodes(nodes: NodeInstance[], errorNodeId?: string | null): Node<BaseNodeData>[] {
   return nodes.map((node) => {
     const def = getNodeDef(node.type);
     return {
@@ -42,6 +46,7 @@ function toFlowNodes(nodes: NodeInstance[]): Node<BaseNodeData>[] {
       data: {
         def: def!,
         params: node.params,
+        hasError: node.id === errorNodeId,
       },
       selected: false,
     };
@@ -64,13 +69,13 @@ function toFlowEdges(edges: PrismEdge[]): Edge[] {
 /**
  * Main canvas component
  */
-function CanvasInner() {
+function CanvasInner({ errorNodeId }: CanvasProps) {
   const prismNodes = usePrismStore(selectNodes);
   const prismEdges = usePrismStore(selectEdges);
   const { updateNodePosition, addEdge, removeEdge, removeNode, selectNode } = usePrismStore();
 
   // Convert to React Flow format
-  const nodes = useMemo(() => toFlowNodes(prismNodes), [prismNodes]);
+  const nodes = useMemo(() => toFlowNodes(prismNodes, errorNodeId), [prismNodes, errorNodeId]);
   const edges = useMemo(() => toFlowEdges(prismEdges), [prismEdges]);
 
   // Handle node position changes
@@ -179,10 +184,10 @@ function CanvasInner() {
 /**
  * Canvas wrapped with ReactFlowProvider
  */
-export function Canvas() {
+export function Canvas({ errorNodeId }: CanvasProps) {
   return (
     <ReactFlowProvider>
-      <CanvasInner />
+      <CanvasInner errorNodeId={errorNodeId} />
     </ReactFlowProvider>
   );
 }

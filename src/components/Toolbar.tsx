@@ -37,7 +37,38 @@ function Button({ onClick, children, variant = 'default', disabled = false }: Bu
 }
 
 /**
- * Export modal for GLSL code
+ * Simple GLSL syntax highlighting
+ */
+function highlightGLSL(code: string): React.ReactNode[] {
+  const keywords = /\b(void|float|vec2|vec3|vec4|mat2|mat3|mat4|int|bool|uniform|in|out|precision|highp|mediump|lowp|const|return|if|else|for|while|break|continue|discard)\b/g;
+  const functions = /\b(sin|cos|tan|asin|acos|atan|pow|exp|log|sqrt|abs|sign|floor|ceil|fract|mod|min|max|clamp|mix|step|smoothstep|length|distance|dot|cross|normalize|reflect|refract|texture)\b/g;
+  const numbers = /\b(\d+\.?\d*[eE]?[+-]?\d*|0x[0-9a-fA-F]+)\b/g;
+  const comments = /(\/\/.*$|\/\*[\s\S]*?\*\/)/gm;
+  const preprocessor = /^(\s*#\w+.*$)/gm;
+
+  // Split by lines to maintain structure
+  const lines = code.split('\n');
+  
+  return lines.map((line, i) => {
+    // Highlight the line
+    const highlighted = line
+      .replace(comments, '<span class="text-gray-500">$1</span>')
+      .replace(preprocessor, '<span class="text-purple-400">$1</span>')
+      .replace(keywords, '<span class="text-blue-400">$1</span>')
+      .replace(functions, '<span class="text-yellow-400">$1</span>')
+      .replace(numbers, '<span class="text-green-400">$1</span>');
+    
+    return (
+      <span key={i}>
+        <span dangerouslySetInnerHTML={{ __html: highlighted }} />
+        {i < lines.length - 1 && '\n'}
+      </span>
+    );
+  });
+}
+
+/**
+ * Export modal for GLSL code with syntax highlighting
  */
 function ExportModal({ code, onClose }: { code: string; onClose: () => void }) {
   const handleCopy = useCallback(() => {
@@ -65,7 +96,7 @@ function ExportModal({ code, onClose }: { code: string; onClose: () => void }) {
         </div>
 
         <pre className="flex-1 overflow-auto p-4 text-sm text-gray-300 font-mono bg-gray-900">
-          {code}
+          {highlightGLSL(code)}
         </pre>
 
         <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-700">

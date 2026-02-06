@@ -451,6 +451,8 @@ describe('Code Generator', () => {
       expect(result.success).toBe(true);
       expect(result.code).toContain('#version 300 es');
       expect(result.code).toContain('fragColor');
+      // CRITICAL: Verify fragColor is actually assigned, not just declared
+      expect(result.code).toMatch(/fragColor\s*=\s*vec4/);
     });
 
     it('should generate shader with connected nodes', () => {
@@ -460,12 +462,13 @@ describe('Code Generator', () => {
         { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
       ];
       const edges: Edge[] = [
-        { id: 'e1', source: 'rgb', sourceHandle: 'rgb', target: 'out', targetHandle: 'color' },
+        { id: 'e1', source: 'rgb', sourceHandle: 'color', target: 'out', targetHandle: 'color' },
       ];
       
       const result = generateGLSL(nodes, edges);
       expect(result.success).toBe(true);
-      expect(result.code).toContain('fragColor');
+      // Verify fragColor is assigned with the connected color
+      expect(result.code).toMatch(/fragColor\s*=\s*vec4/);
     });
 
     it('should fail on cycle', () => {

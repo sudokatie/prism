@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Preview - WebGL preview panel
+ * Preview - WebGL preview panel with resizable width
  */
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useCompiler } from '@/hooks/useCompiler';
 import { useRenderer } from '@/hooks/useRenderer';
 
@@ -15,8 +15,10 @@ interface PreviewProps {
 /**
  * WebGL preview panel with real-time rendering
  */
-export function Preview({ width = 400, height = 400 }: PreviewProps) {
+export function Preview({ width: initialWidth = 400, height = 400 }: PreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [panelWidth, setPanelWidth] = useState(initialWidth);
+  const [isResizing, setIsResizing] = useState(false);
 
   // Compile node graph to GLSL
   const { code, error: compileError, errorNodeId } = useCompiler();
@@ -27,17 +29,60 @@ export function Preview({ width = 400, height = 400 }: PreviewProps) {
   // Combined error
   const error = compileError || renderError;
 
-  // Update canvas size
+  // Resize handling
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Panel is on the right, so width = window.right - mouse.x
+      const newWidth = Math.max(200, Math.min(600, window.innerWidth - e.clientX));
+      setPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Update canvas size based on panel width
+  const canvasSize = Math.min(panelWidth - 32, height); // 32px padding
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = canvasSize;
+      canvas.height = canvasSize;
     }
-  }, [width, height]);
+  }, [canvasSize]);
 
   return (
-    <div className="flex flex-col bg-gray-800 border-l border-gray-700">
+    <div 
+      className="flex flex-col bg-gray-800 border-l border-gray-700 relative"
+      style={{ width: panelWidth }}
+    >
+      {/* Resize handle */}
+      <div
+        onMouseDown={handleResizeStart}
+        className={`
+          absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize
+          hover:bg-blue-500 transition-colors
+          ${isResizing ? 'bg-blue-500' : 'bg-transparent'}
+        `}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
         <h2 className="text-sm font-semibold text-white">Preview</h2>
@@ -59,8 +104,8 @@ export function Preview({ width = 400, height = 400 }: PreviewProps) {
       <div className="relative flex-1 flex items-center justify-center p-4">
         <canvas
           ref={canvasRef}
-          width={width}
-          height={height}
+          width={canvasSize}
+          height={canvasSize}
           className="bg-black rounded shadow-lg"
           style={{ maxWidth: '100%', maxHeight: '100%' }}
         />

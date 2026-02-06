@@ -259,15 +259,14 @@ export function generateGLSL(nodes: NodeInstance[], edges: Edge[]): CodeGenResul
     // Generate code for this node
     const outputs = def.generateCode(inputs, params);
     
-    // Store output variable names
-    for (const outputDef of def.outputs) {
-      const code = outputs[outputDef.name];
-      if (code) {
-        if (node.type === 'output') {
-          // Output node writes directly to fragColor
-          lines.push(`  fragColor = ${code};`);
-        } else {
-          // Create variable for output
+    // Handle output node specially - it uses __fragColor key
+    if (node.type === 'output' && outputs.__fragColor) {
+      lines.push(`  fragColor = ${outputs.__fragColor};`);
+    } else {
+      // Store output variable names for non-output nodes
+      for (const outputDef of def.outputs) {
+        const code = outputs[outputDef.name];
+        if (code) {
           const varName = `v${varCounter++}`;
           const glslType = outputDef.type;
           lines.push(`  ${glslType} ${varName} = ${code};`);
