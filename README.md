@@ -26,7 +26,7 @@ npm run build
 
 Open [http://localhost:3000](http://localhost:3000) to start creating.
 
-## Node Reference
+## Node Reference (46 nodes)
 
 ### Input Nodes
 - **UV** - Screen coordinates (0-1)
@@ -35,11 +35,15 @@ Open [http://localhost:3000](http://localhost:3000) to start creating.
 - **Resolution** - Canvas size in pixels
 
 ### Math Nodes
-- **Add/Multiply** - Basic arithmetic
+- **Add/Subtract/Multiply/Divide** - Basic arithmetic
 - **Sin/Cos** - Trigonometric functions
 - **Mix** - Linear interpolation
 - **Smoothstep/Step** - Threshold functions
 - **Fract** - Fractional part
+- **Abs/Min/Max/Clamp** - Value constraints
+- **Floor/Ceil/Mod** - Rounding operations
+- **Pow/Sqrt** - Power functions
+- **Remap** - Value remapping
 
 ### Pattern Nodes
 - **Noise** - Simplex noise with octaves
@@ -51,6 +55,28 @@ Open [http://localhost:3000](http://localhost:3000) to start creating.
 - **RGB** - Constant color picker
 - **HSV to RGB** - Color space conversion
 - **Blend** - Multiple blend modes
+
+### Color Grading Nodes (new in v0.2)
+- **Levels** - Black/white point, gamma, output range
+- **Brightness/Contrast** - Basic adjustments
+- **Color Balance** - Shadows/midtones/highlights RGB shifts
+- **Vibrance** - Intelligent saturation
+- **Posterize** - Reduce color levels
+
+### Distortion Nodes (new in v0.2)
+- **Wave** - Sine wave distortion
+- **Ripple** - Radial ripple effect
+- **Displacement** - UV displacement mapping
+- **Twist** - Rotational twist
+- **Pixelate** - Pixel grid effect
+- **Swirl** - Spiral distortion
+
+### Blur/Effect Nodes (new in v0.2)
+- **Chromatic Aberration** - RGB channel separation
+- **Radial Blur** - Zoom blur effect
+- **Motion Blur** - Directional blur
+- **Sharpen** - Edge enhancement
+- **Vignette** - Darken edges
 
 ### Output
 - **Output** - Final color (required)
