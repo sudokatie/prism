@@ -119,6 +119,36 @@ vec3 hsv2rgb(vec3 c) {
 `;
 
 /**
+ * Color Balance helper - applies RGB shifts based on luminance
+ */
+export const COLOR_BALANCE_HELPER = `
+// Color balance with shadows/mids/highlights
+vec3 colorBalance(vec3 col, vec3 shadows, vec3 midtones, vec3 highlights) {
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  float shadowWeight = 1.0 - smoothstep(0.0, 0.33, lum);
+  float highlightWeight = smoothstep(0.67, 1.0, lum);
+  float midtoneWeight = 1.0 - shadowWeight - highlightWeight;
+  return clamp(col + shadows * shadowWeight + midtones * midtoneWeight + highlights * highlightWeight, 0.0, 1.0);
+}
+`;
+
+/**
+ * Vibrance helper - saturation that affects less-saturated colors more
+ */
+export const VIBRANCE_HELPER = `
+// Vibrance - intelligent saturation
+vec3 vibrance(vec3 col, float vib, float sat) {
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  float maxCol = max(col.r, max(col.g, col.b));
+  float minCol = min(col.r, min(col.g, col.b));
+  float currentSat = (maxCol - minCol) / (maxCol + 0.001);
+  float vibranceAmount = vib * (1.0 - currentSat);
+  vec3 result = mix(vec3(lum), col, 1.0 + vibranceAmount);
+  return mix(vec3(lum), result, sat);
+}
+`;
+
+/**
  * Get all available helpers by name
  */
 export function getHelper(name: string): string | undefined {
@@ -127,6 +157,8 @@ export function getHelper(name: string): string | undefined {
     case 'snoise': return NOISE_2D_HELPER;
     case 'noise3d': return NOISE_3D_HELPER;
     case 'hsv2rgb': return HSV_TO_RGB_HELPER;
+    case 'colorBalance': return COLOR_BALANCE_HELPER;
+    case 'vibrance': return VIBRANCE_HELPER;
     default: return undefined;
   }
 }

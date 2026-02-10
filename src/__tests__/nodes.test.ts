@@ -11,7 +11,8 @@ describe('Node Registry', () => {
     it('should return all nodes', () => {
       const nodes = getAllNodeDefs();
       expect(nodes.length).toBeGreaterThan(0);
-      expect(nodes.length).toBe(20); // 4 input + 8 math + 4 pattern + 3 color + 1 output
+      // 4 input + 18 math + 4 pattern + 10 color + 9 distortion + 1 output = 46
+      expect(nodes.length).toBe(46);
     });
 
     it('should include nodes from all categories', () => {
@@ -21,6 +22,7 @@ describe('Node Registry', () => {
       expect(categories.has('math')).toBe(true);
       expect(categories.has('pattern')).toBe(true);
       expect(categories.has('color')).toBe(true);
+      expect(categories.has('distortion')).toBe(true);
       expect(categories.has('output')).toBe(true);
     });
   });
@@ -47,7 +49,7 @@ describe('Node Registry', () => {
 
     it('should return all math nodes', () => {
       const nodes = getNodesByCategory('math');
-      expect(nodes.length).toBe(8);
+      expect(nodes.length).toBe(18); // 8 original + 10 utility (abs, min, max, clamp, remap, floor, ceil, mod, pow, sqrt)
       expect(nodes.every(n => n.category === 'math')).toBe(true);
     });
 
@@ -58,7 +60,14 @@ describe('Node Registry', () => {
 
     it('should return all color nodes', () => {
       const nodes = getNodesByCategory('color');
-      expect(nodes.length).toBe(3);
+      // 3 original (rgb, hsv2rgb, blend) + 5 grading (levels, brightness/contrast, color balance, vibrance, posterize) + 2 effects (sharpen, vignette) = 10
+      expect(nodes.length).toBe(10);
+    });
+
+    it('should return all distortion nodes', () => {
+      const nodes = getNodesByCategory('distortion');
+      // 6 original + 3 blur (chromatic, radial, motion) = 9
+      expect(nodes.length).toBe(9);
     });
 
     it('should return output node', () => {
@@ -75,11 +84,12 @@ describe('Node Registry', () => {
   describe('getCategories', () => {
     it('should return all unique categories', () => {
       const categories = getCategories();
-      expect(categories.length).toBe(5);
+      expect(categories.length).toBe(6);
       expect(categories).toContain('input');
       expect(categories).toContain('math');
       expect(categories).toContain('pattern');
       expect(categories).toContain('color');
+      expect(categories).toContain('distortion');
       expect(categories).toContain('output');
     });
   });

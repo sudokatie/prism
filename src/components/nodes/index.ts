@@ -4,8 +4,9 @@ import type { NodeDef } from '@/lib/types';
 import { UVNode, TimeNode, MouseNode, ResolutionNode } from './InputNodes';
 import { MathNodes } from './MathNodes';
 import { NoiseNode, CircleNode, CheckerNode, GradientNode } from './PatternNodes';
-import { RGBNode, HSVToRGBNode, BlendNode } from './ColorNodes';
+import { RGBNode, HSVToRGBNode, BlendNode, LevelsNode, BrightnessContrastNode, ColorBalanceNode, VibranceNode, PosterizeNode } from './ColorNodes';
 import { DistortionNodes } from './DistortionNodes';
+import { BlurNodes } from './BlurNodes';
 import { OutputNode } from './OutputNode';
 
 // All available nodes
@@ -26,8 +27,15 @@ const allNodes: NodeDef[] = [
   RGBNode,
   HSVToRGBNode,
   BlendNode,
+  LevelsNode,
+  BrightnessContrastNode,
+  ColorBalanceNode,
+  VibranceNode,
+  PosterizeNode,
   // Distortion nodes
   ...DistortionNodes,
+  // Blur/effect nodes
+  ...BlurNodes,
   // Output nodes
   OutputNode,
 ];
@@ -92,4 +100,5 @@ export * from './MathNodes';
 export * from './PatternNodes';
 export * from './ColorNodes';
 export * from './DistortionNodes';
+export * from './BlurNodes';
 export * from './OutputNode';
