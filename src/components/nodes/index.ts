@@ -2,9 +2,10 @@
 
 import type { NodeDef } from '@/lib/types';
 import { UVNode, TimeNode, MouseNode, ResolutionNode } from './InputNodes';
-import { AddNode, MultiplyNode, SinNode, CosNode, MixNode, SmoothstepNode, StepNode, FractNode } from './MathNodes';
+import { MathNodes } from './MathNodes';
 import { NoiseNode, CircleNode, CheckerNode, GradientNode } from './PatternNodes';
 import { RGBNode, HSVToRGBNode, BlendNode } from './ColorNodes';
+import { DistortionNodes } from './DistortionNodes';
 import { OutputNode } from './OutputNode';
 
 // All available nodes
@@ -15,14 +16,7 @@ const allNodes: NodeDef[] = [
   MouseNode,
   ResolutionNode,
   // Math nodes
-  AddNode,
-  MultiplyNode,
-  SinNode,
-  CosNode,
-  MixNode,
-  SmoothstepNode,
-  StepNode,
-  FractNode,
+  ...MathNodes,
   // Pattern nodes
   NoiseNode,
   CircleNode,
@@ -32,6 +26,8 @@ const allNodes: NodeDef[] = [
   RGBNode,
   HSVToRGBNode,
   BlendNode,
+  // Distortion nodes
+  ...DistortionNodes,
   // Output nodes
   OutputNode,
 ];
@@ -95,4 +91,5 @@ export * from './InputNodes';
 export * from './MathNodes';
 export * from './PatternNodes';
 export * from './ColorNodes';
+export * from './DistortionNodes';
 export * from './OutputNode';

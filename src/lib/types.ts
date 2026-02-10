@@ -20,7 +20,7 @@ export interface ParamDef {
 export interface NodeDef {
   type: string;
   label: string;
-  category: 'input' | 'math' | 'pattern' | 'color' | 'output';
+  category: 'input' | 'math' | 'pattern' | 'color' | 'distortion' | 'output';
   inputs: PortDef[];
   outputs: PortDef[];
   params: ParamDef[];
