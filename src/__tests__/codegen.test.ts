@@ -334,7 +334,7 @@ describe("Output Node", () => {
 });
 
 // Code Generator Tests
-import { topologicalSort, inferTypes, canConnect, getConversion, generateGLSL } from '../lib/codegen';
+import { topologicalSort, inferTypes, canConnect, getConversion, generateGLSL, generateHLSL, generateMetal } from '../lib/codegen';
 import type { NodeInstance, Edge } from '../lib/types';
 
 describe('Code Generator', () => {
@@ -536,6 +536,117 @@ describe('Code Generator', () => {
       const result = generateGLSL(nodes, edges);
       expect(result.success).toBe(true);
       expect(result.helpers).toBeDefined();
+    });
+  });
+
+  describe('generateHLSL', () => {
+    it('should fail without output node', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateHLSL(nodes, []);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('output');
+    });
+
+    it('should generate HLSL shader with proper types', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'out', type: 'output', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateHLSL(nodes, []);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('HLSL');
+      expect(result.code).toContain('cbuffer');
+      expect(result.code).toContain('float2');  // HLSL type
+      expect(result.code).toContain('SV_TARGET');
+      expect(result.code).not.toContain('vec2'); // Should not have GLSL types
+    });
+
+    it('should convert vec types to float types', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [];
+      
+      const result = generateHLSL(nodes, edges);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('float2');
+      expect(result.code).not.toContain('vec2');
+    });
+
+    it('should convert GLSL functions to HLSL equivalents', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'fract', type: 'math_fract', position: { x: 100, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 200, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'uv', sourceHandle: 'x', target: 'fract', targetHandle: 'x' },
+      ];
+      
+      const result = generateHLSL(nodes, edges);
+      expect(result.success).toBe(true);
+      // GLSL fract -> HLSL frac
+      expect(result.code).toContain('frac(');
+      expect(result.code).not.toContain('fract(');
+    });
+  });
+
+  describe('generateMetal', () => {
+    it('should fail without output node', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'a', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateMetal(nodes, []);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('output');
+    });
+
+    it('should generate Metal shader with proper syntax', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'out', type: 'output', position: { x: 0, y: 0 }, params: {} },
+      ];
+      
+      const result = generateMetal(nodes, []);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('Metal');
+      expect(result.code).toContain('#include <metal_stdlib>');
+      expect(result.code).toContain('using namespace metal');
+      expect(result.code).toContain('fragment float4 fragmentMain');
+      expect(result.code).toContain('[[stage_in]]');
+    });
+
+    it('should use Metal types', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [];
+      
+      const result = generateMetal(nodes, edges);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('float2');
+      expect(result.code).not.toContain('vec2');
+    });
+
+    it('should have correct shader structure', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'rgb', type: 'color_rgb', position: { x: 0, y: 0 }, params: { color: [1.0, 0.0, 0.0] } },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      const edges: Edge[] = [
+        { id: 'e1', source: 'rgb', sourceHandle: 'color', target: 'out', targetHandle: 'color' },
+      ];
+      
+      const result = generateMetal(nodes, edges);
+      expect(result.success).toBe(true);
+      expect(result.code).toContain('struct Uniforms');
+      expect(result.code).toContain('struct VertexOut');
+      expect(result.code).toContain('return'); // Metal uses return, not fragColor assignment
     });
   });
 });
