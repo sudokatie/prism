@@ -81,11 +81,38 @@ Open [http://localhost:3000](http://localhost:3000) to start creating.
 ### Output
 - **Output** - Final color (required)
 
+## Animation (new in v0.3)
+
+Animate shader parameters over time with keyframe animation.
+
+### Timeline Controls
+- **Cmd/Ctrl+T** - Toggle timeline visibility
+- **Space** - Play/pause animation (when timeline visible)
+- Click timeline to seek
+- Click on track to add keyframe
+- Drag keyframes to move them
+- Right-click keyframe to delete
+
+### Interpolation Modes
+- **Linear** - Constant rate of change (blue)
+- **Ease In** - Slow start, fast end (green)
+- **Ease Out** - Fast start, slow end (yellow)
+- **Ease In-Out** - Smooth start and end (purple)
+
+### Features
+- Real-time parameter animation
+- Multiple tracks per project
+- Loop toggle
+- Adjustable duration
+- Export animated shaders with time uniforms
+
 ## Keyboard Shortcuts
 
 - **Delete/Backspace** - Remove selected node
 - **Cmd/Ctrl+D** - Duplicate selected node
 - **Cmd/Ctrl+S** - Save project
+- **Cmd/Ctrl+T** - Toggle animation timeline
+- **Space** - Play/pause animation
 - **Escape** - Deselect
 
 ## Tech Stack
