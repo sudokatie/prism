@@ -4,19 +4,51 @@
  * Prism - Visual Shader Editor
  * Main application page
  */
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { Toolbar } from '@/components/Toolbar';
 import { NodePalette } from '@/components/NodePalette';
 import { Canvas } from '@/components/Canvas';
 import { Preview } from '@/components/Preview';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
+import { Timeline } from '@/components/Timeline';
 import { usePrismStore } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
+import { useAnimation } from '@/hooks/useAnimation';
+import { getNodeDef } from '@/components/nodes';
 
 export default function Home() {
-  const { removeNode, selectedNodeId, selectNode } = usePrismStore();
+  const { removeNode, selectedNodeId, selectNode, nodes } = usePrismStore();
   const addNode = usePrismStore((state) => state.addNode);
   const { errorNodeId } = useCompiler();
+  
+  // Animation state
+  const [timelineVisible, setTimelineVisible] = useState(false);
+  const animation = useAnimation(10);
+  
+  // Build node labels map for timeline
+  const nodeLabels = useMemo(() => {
+    const map = new Map<string, string>();
+    nodes.forEach((node) => {
+      const def = getNodeDef(node.type);
+      map.set(node.id, def?.label || node.type);
+    });
+    return map;
+  }, [nodes]);
+  
+  // Apply animated values to node params
+  useEffect(() => {
+    if (animation.tracks.length === 0) return;
+    
+    const animatedValues = animation.getAnimatedValues();
+    animatedValues.forEach((value, key) => {
+      const [nodeId, param] = key.split('.');
+      const currentValue = usePrismStore.getState().nodes.find((n) => n.id === nodeId)?.params[param];
+      // Only update if different (avoid infinite loops)
+      if (JSON.stringify(currentValue) !== JSON.stringify(value)) {
+        usePrismStore.getState().updateNodeParam(nodeId, param, value);
+      }
+    });
+  }, [animation.currentTime, animation.tracks]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -65,8 +97,26 @@ export default function Home() {
       if (e.key === 'Escape') {
         selectNode(null);
       }
+      
+      // Toggle timeline (Cmd/Ctrl + T)
+      if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+        e.preventDefault();
+        setTimelineVisible((v) => !v);
+      }
+      
+      // Space to play/pause animation
+      if (e.key === ' ' && timelineVisible) {
+        // Don't toggle if focused on input
+        if ((e.target as HTMLElement).tagName === 'INPUT') return;
+        e.preventDefault();
+        if (animation.isPlaying) {
+          animation.pause();
+        } else {
+          animation.play();
+        }
+      }
     },
-    [selectedNodeId, removeNode, selectNode]
+    [selectedNodeId, removeNode, selectNode, timelineVisible, animation]
   );
 
   // Register keyboard listener
@@ -124,6 +174,27 @@ export default function Home() {
         {/* Right: Preview */}
         <Preview width={350} height={350} />
       </div>
+      
+      {/* Animation Timeline */}
+      <Timeline
+        isPlaying={animation.isPlaying}
+        currentTime={animation.currentTime}
+        duration={animation.duration}
+        loop={animation.loop}
+        tracks={animation.tracks}
+        nodeLabels={nodeLabels}
+        onPlay={animation.play}
+        onPause={animation.pause}
+        onStop={animation.stop}
+        onSeek={animation.seek}
+        onLoopChange={animation.setLoop}
+        onDurationChange={animation.setDuration}
+        onAddKeyframe={animation.addKeyframe}
+        onRemoveKeyframe={animation.removeKeyframe}
+        onUpdateKeyframe={animation.updateKeyframe}
+        isVisible={timelineVisible}
+        onToggleVisibility={() => setTimelineVisible((v) => !v)}
+      />
     </div>
   );
 }
