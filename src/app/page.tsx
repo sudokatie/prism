@@ -14,7 +14,6 @@ import { Timeline } from '@/components/Timeline';
 import { usePrismStore } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
 import { useAnimation } from '@/hooks/useAnimation';
-import { AnimationProvider, useAnimationContext } from '@/lib/animationContext';
 import { getNodeDef } from '@/components/nodes';
 
 export default function Home() {
@@ -49,6 +48,7 @@ export default function Home() {
         usePrismStore.getState().updateNodeParam(nodeId, param, value);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animation.currentTime, animation.tracks]);
 
   // Handle keyboard shortcuts

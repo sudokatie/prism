@@ -180,7 +180,7 @@ export function Timeline({
       <div className="max-h-48 overflow-y-auto">
         {tracks.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-zinc-500">
-            No animation tracks. Select a node and click "Add Keyframe" to start animating.
+            No animation tracks. Select a node and click &quot;Add Keyframe&quot; to start animating.
           </div>
         ) : (
           tracks.map((track) => (

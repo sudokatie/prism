@@ -1,7 +1,7 @@
 // Animation playback hook
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { AnimationData, AnimationState, AnimationTrack, Keyframe, KeyframeValue } from '../lib/types';
+import { AnimationData, AnimationTrack, Keyframe, KeyframeValue } from '../lib/types';
 import { getAnimatedValues } from '../lib/interpolation';
 
 interface UseAnimationReturn {

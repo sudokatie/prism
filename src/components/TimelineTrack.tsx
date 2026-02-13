@@ -20,7 +20,7 @@ const TRACK_HEIGHT = 32;
 const KEYFRAME_SIZE = 12;
 
 export function TimelineTrack({
-  nodeId,
+  nodeId: _nodeId,
   nodeLabel,
   param,
   keyframes,
@@ -29,7 +29,7 @@ export function TimelineTrack({
   onAddKeyframe,
   onRemoveKeyframe,
   onMoveKeyframe,
-  onUpdateKeyframe,
+  onUpdateKeyframe: _onUpdateKeyframe,
 }: TimelineTrackProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{ time: number; startX: number } | null>(null);
