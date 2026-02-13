@@ -169,7 +169,16 @@ export default function Home() {
           </div>
 
           {/* Bottom: Properties Panel */}
-          <PropertiesPanel />
+          <PropertiesPanel
+            onAddKeyframe={(nodeId, param, keyframe) => {
+              // Ensure track exists
+              animation.addTrack(nodeId, param);
+              // Add keyframe
+              animation.addKeyframe(nodeId, param, keyframe);
+            }}
+            animatedParams={new Set(animation.tracks.map(t => `${t.nodeId}.${t.param}`))}
+            currentTime={animation.currentTime}
+          />
         </div>
 
         {/* Right: Preview */}

@@ -6,7 +6,10 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
 import { usePrismStore, selectSelectedNode } from '@/lib/store';
 import { getNodeDef } from '@/components/nodes';
-import type { ParamDef } from '@/lib/types';
+import type { ParamDef, Keyframe, KeyframeValue } from '@/lib/types';
+
+// Animation callback type
+type OnAddKeyframe = (nodeId: string, param: string, keyframe: Keyframe) => void;
 
 interface FloatInputProps {
   param: ParamDef;
@@ -182,15 +185,35 @@ interface ParamRowProps {
   param: ParamDef;
   value: unknown;
   onChange: (value: unknown) => void;
+  onAnimate?: () => void;
+  isAnimated?: boolean;
 }
 
 /**
  * Parameter row with label and input
  */
-function ParamRow({ param, value, onChange }: ParamRowProps) {
+function ParamRow({ param, value, onChange, onAnimate, isAnimated }: ParamRowProps) {
+  // Only float, vec2, vec3, vec4, color are animatable
+  const isAnimatable = ['float', 'vec2', 'vec3', 'vec4', 'color'].includes(param.type);
+  
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs text-gray-400 capitalize">{param.name}</label>
+      <div className="flex items-center justify-between">
+        <label className="text-xs text-gray-400 capitalize">{param.name}</label>
+        {isAnimatable && onAnimate && (
+          <button
+            onClick={onAnimate}
+            className={`text-xs px-1.5 py-0.5 rounded ${
+              isAnimated
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+            }`}
+            title={isAnimated ? 'Add keyframe at current time' : 'Add to animation'}
+          >
+            {isAnimated ? 'Key' : 'Animate'}
+          </button>
+        )}
+      </div>
 
       {param.type === 'float' && (
         <FloatInput
@@ -264,10 +287,20 @@ function ParamRow({ param, value, onChange }: ParamRowProps) {
   );
 }
 
+interface PropertiesPanelProps {
+  onAddKeyframe?: OnAddKeyframe;
+  animatedParams?: Set<string>;  // Set of "nodeId.param" strings
+  currentTime?: number;
+}
+
 /**
  * Properties panel sidebar
  */
-export function PropertiesPanel() {
+export function PropertiesPanel({ 
+  onAddKeyframe, 
+  animatedParams,
+  currentTime = 0 
+}: PropertiesPanelProps) {
   const selectedNode = usePrismStore(selectSelectedNode);
   const { updateNodeParam } = usePrismStore();
 
@@ -287,6 +320,28 @@ export function PropertiesPanel() {
     updateNodeParam(selectedNode.id, paramName, value);
   };
 
+  const handleAnimate = (paramName: string, value: unknown) => {
+    if (!onAddKeyframe) return;
+    
+    // Convert value to KeyframeValue
+    let keyframeValue: KeyframeValue;
+    if (typeof value === 'number') {
+      keyframeValue = value;
+    } else if (Array.isArray(value)) {
+      keyframeValue = value as number[];
+    } else {
+      // Default fallback
+      const param = def.params.find(p => p.name === paramName);
+      keyframeValue = param?.default as KeyframeValue ?? 0;
+    }
+    
+    onAddKeyframe(selectedNode.id, paramName, {
+      time: Math.round(currentTime * 100) / 100,
+      value: keyframeValue,
+      interpolation: 'linear',
+    });
+  };
+
   return (
     <div className="h-48 bg-gray-800 border-t border-gray-700 p-4 overflow-y-auto">
       <h2 className="text-sm font-semibold text-white mb-3">{def.label}</h2>
@@ -295,14 +350,19 @@ export function PropertiesPanel() {
         <p className="text-xs text-gray-500">No editable parameters</p>
       ) : (
         <div className="space-y-3">
-          {def.params.map((param) => (
-            <ParamRow
-              key={param.name}
-              param={param}
-              value={selectedNode.params[param.name]}
-              onChange={(value) => handleParamChange(param.name, value)}
-            />
-          ))}
+          {def.params.map((param) => {
+            const isAnimated = animatedParams?.has(`${selectedNode.id}.${param.name}`);
+            return (
+              <ParamRow
+                key={param.name}
+                param={param}
+                value={selectedNode.params[param.name]}
+                onChange={(value) => handleParamChange(param.name, value)}
+                onAnimate={onAddKeyframe ? () => handleAnimate(param.name, selectedNode.params[param.name]) : undefined}
+                isAnimated={isAnimated}
+              />
+            );
+          })}
         </div>
       )}
     </div>
