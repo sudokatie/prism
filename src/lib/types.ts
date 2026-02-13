@@ -123,6 +123,70 @@ export function getPortComponentCount(type: PortType): number {
   }
 }
 
+// Animation types
+export type InterpolationMode = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+
+export type KeyframeValue = number | number[];
+
+export interface Keyframe {
+  time: number;
+  value: KeyframeValue;
+  interpolation: InterpolationMode;
+}
+
+export interface AnimationTrack {
+  nodeId: string;
+  param: string;
+  keyframes: Keyframe[];
+}
+
+export interface AnimationData {
+  duration: number;
+  loop: boolean;
+  tracks: AnimationTrack[];
+}
+
+export interface AnimationState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  loop: boolean;
+}
+
+// Animation type guards
+export function isKeyframe(value: unknown): value is Keyframe {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  const validModes = ['linear', 'easeIn', 'easeOut', 'easeInOut'];
+  return (
+    typeof obj.time === 'number' &&
+    (typeof obj.value === 'number' || Array.isArray(obj.value)) &&
+    validModes.includes(obj.interpolation as string)
+  );
+}
+
+export function isAnimationTrack(value: unknown): value is AnimationTrack {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.nodeId === 'string' &&
+    typeof obj.param === 'string' &&
+    Array.isArray(obj.keyframes) &&
+    obj.keyframes.every(isKeyframe)
+  );
+}
+
+export function isAnimationData(value: unknown): value is AnimationData {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.duration === 'number' &&
+    typeof obj.loop === 'boolean' &&
+    Array.isArray(obj.tracks) &&
+    obj.tracks.every(isAnimationTrack)
+  );
+}
+
 // Project validation
 export function validateProject(project: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];

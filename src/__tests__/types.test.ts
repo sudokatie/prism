@@ -5,6 +5,9 @@ import {
   isNodeInstance,
   isEdge,
   isProject,
+  isKeyframe,
+  isAnimationTrack,
+  isAnimationData,
   getPortDefaultValue,
   getPortComponentCount,
   validateProject,
@@ -102,6 +105,92 @@ describe('Type guards', () => {
     it('returns false for invalid project', () => {
       expect(isProject({ version: '1.0' })).toBe(false);
       expect(isProject(null)).toBe(false);
+    });
+  });
+});
+
+describe('Animation type guards', () => {
+  describe('isKeyframe', () => {
+    it('returns true for valid keyframe with number value', () => {
+      expect(isKeyframe({ time: 0, value: 1.5, interpolation: 'linear' })).toBe(true);
+    });
+
+    it('returns true for valid keyframe with array value', () => {
+      expect(isKeyframe({ time: 5, value: [1, 0, 0], interpolation: 'easeIn' })).toBe(true);
+    });
+
+    it('validates all interpolation modes', () => {
+      expect(isKeyframe({ time: 0, value: 0, interpolation: 'linear' })).toBe(true);
+      expect(isKeyframe({ time: 0, value: 0, interpolation: 'easeIn' })).toBe(true);
+      expect(isKeyframe({ time: 0, value: 0, interpolation: 'easeOut' })).toBe(true);
+      expect(isKeyframe({ time: 0, value: 0, interpolation: 'easeInOut' })).toBe(true);
+    });
+
+    it('returns false for invalid keyframe', () => {
+      expect(isKeyframe({ time: 0, value: 1 })).toBe(false);
+      expect(isKeyframe({ time: 0, interpolation: 'linear' })).toBe(false);
+      expect(isKeyframe({ time: 0, value: 1, interpolation: 'invalid' })).toBe(false);
+      expect(isKeyframe(null)).toBe(false);
+    });
+  });
+
+  describe('isAnimationTrack', () => {
+    it('returns true for valid track', () => {
+      const track = {
+        nodeId: 'node-1',
+        param: 'scale',
+        keyframes: [
+          { time: 0, value: 1, interpolation: 'linear' },
+          { time: 10, value: 5, interpolation: 'easeOut' },
+        ],
+      };
+      expect(isAnimationTrack(track)).toBe(true);
+    });
+
+    it('returns true for empty keyframes', () => {
+      expect(isAnimationTrack({ nodeId: 'n', param: 'p', keyframes: [] })).toBe(true);
+    });
+
+    it('returns false for invalid track', () => {
+      expect(isAnimationTrack({ nodeId: 'n', param: 'p' })).toBe(false);
+      expect(isAnimationTrack({ nodeId: 'n', keyframes: [] })).toBe(false);
+      expect(isAnimationTrack(null)).toBe(false);
+    });
+
+    it('returns false if any keyframe is invalid', () => {
+      const track = {
+        nodeId: 'n',
+        param: 'p',
+        keyframes: [{ time: 0, value: 1, interpolation: 'invalid' }],
+      };
+      expect(isAnimationTrack(track)).toBe(false);
+    });
+  });
+
+  describe('isAnimationData', () => {
+    it('returns true for valid animation data', () => {
+      const data = {
+        duration: 10,
+        loop: true,
+        tracks: [
+          {
+            nodeId: 'n1',
+            param: 'scale',
+            keyframes: [{ time: 0, value: 1, interpolation: 'linear' }],
+          },
+        ],
+      };
+      expect(isAnimationData(data)).toBe(true);
+    });
+
+    it('returns true for empty tracks', () => {
+      expect(isAnimationData({ duration: 5, loop: false, tracks: [] })).toBe(true);
+    });
+
+    it('returns false for invalid animation data', () => {
+      expect(isAnimationData({ duration: 10, loop: true })).toBe(false);
+      expect(isAnimationData({ duration: 10, tracks: [] })).toBe(false);
+      expect(isAnimationData(null)).toBe(false);
     });
   });
 });
