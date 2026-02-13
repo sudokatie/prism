@@ -14,6 +14,7 @@ import { Timeline } from '@/components/Timeline';
 import { usePrismStore } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
 import { useAnimation } from '@/hooks/useAnimation';
+import { AnimationProvider, useAnimationContext } from '@/lib/animationContext';
 import { getNodeDef } from '@/components/nodes';
 
 export default function Home() {
