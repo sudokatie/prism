@@ -6,9 +6,10 @@ Visual shader programming for generative art. Create stunning shaders without wr
 
 - Node-based visual editor for shader creation
 - Real-time WebGL 2.0 preview at 60fps
-- 20+ built-in nodes (input, math, pattern, color, output)
+- 46 built-in nodes (input, math, pattern, color, distortion, output)
+- Preset library with 12 ready-to-use shaders
 - Type-safe connections with automatic conversions
-- Export to GLSL for use in other projects
+- Export to GLSL, HLSL, and Metal
 - Save/load projects as JSON
 
 ## Quick Start
@@ -80,6 +81,30 @@ Open [http://localhost:3000](http://localhost:3000) to start creating.
 
 ### Output
 - **Output** - Final color (required)
+
+## Preset Library (new in v0.3)
+
+Click "Presets" in the toolbar to browse 12 built-in shader presets organized by category:
+
+### Patterns
+- **Plasma Wave** - Classic demoscene effect with animated color waves
+- **Checkerboard** - Simple animated checkerboard pattern
+- **Noise Field** - Animated simplex noise with color gradient
+
+### Effects
+- **Radial Pulse** - Pulsing circular waves from center
+- **Wave Distortion** - Animated wave distortion effect
+- **Pixelate** - Retro pixelated noise effect
+- **Chromatic Shift** - RGB channel separation with noise
+- **Twist** - Spiral twist distortion with noise
+- **Vignette Glow** - Pulsing vignette with color glow
+
+### Generators
+- **Fractal Noise** - Multi-octave fractal brownian motion
+- **Voronoi Cells** - Animated cellular pattern with color
+- **Gradient Flow** - Smooth animated color gradient
+
+Presets provide a starting point - modify and build upon them to create your own effects.
 
 ## Animation (new in v0.3)
 

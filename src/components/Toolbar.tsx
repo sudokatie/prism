@@ -6,6 +6,7 @@
 import { useCallback, useState } from 'react';
 import { usePrismStore, selectProjectName, selectIsModified } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
+import { PresetBrowser } from './PresetBrowser';
 
 interface ButtonProps {
   onClick: () => void;
@@ -118,6 +119,7 @@ export function Toolbar() {
   const { code } = useCompiler();
 
   const [showExport, setShowExport] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
 
   // New project
   const handleNew = useCallback(() => {
@@ -197,6 +199,7 @@ export function Toolbar() {
         {/* Actions */}
         <div className="flex items-center gap-2">
           <Button onClick={handleNew}>New</Button>
+          <Button onClick={() => setShowPresets(true)}>Presets</Button>
           <Button onClick={handleLoad}>Load</Button>
           <Button onClick={handleSave}>Save</Button>
           <Button onClick={handleExport} variant="primary">Export GLSL</Button>
@@ -216,6 +219,11 @@ export function Toolbar() {
       {/* Export modal */}
       {showExport && code && (
         <ExportModal code={code} onClose={() => setShowExport(false)} />
+      )}
+
+      {/* Preset browser */}
+      {showPresets && (
+        <PresetBrowser onClose={() => setShowPresets(false)} />
       )}
     </>
   );
