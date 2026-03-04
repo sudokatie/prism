@@ -537,6 +537,47 @@ describe('Code Generator', () => {
       expect(result.success).toBe(true);
       expect(result.helpers).toBeDefined();
     });
+
+    it('should not include audio uniforms when no audio nodes', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'uv', type: 'input_uv', position: { x: 0, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      
+      const result = generateGLSL(nodes, []);
+      expect(result.success).toBe(true);
+      expect(result.requiresAudio).toBe(false);
+      expect(result.code).not.toContain('u_audio_');
+    });
+
+    it('should include audio uniforms when audio nodes present', () => {
+      const nodes: NodeInstance[] = [
+        { id: 'audio', type: 'audio_input', position: { x: 0, y: 0 }, params: {} },
+        { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+      ];
+      
+      const result = generateGLSL(nodes, []);
+      expect(result.success).toBe(true);
+      expect(result.requiresAudio).toBe(true);
+      expect(result.code).toContain('uniform float u_audio_volume');
+      expect(result.code).toContain('uniform float u_audio_bass');
+      expect(result.code).toContain('uniform float u_audio_fft[8]');
+      expect(result.code).toContain('uniform float u_audio_beat');
+    });
+
+    it('should detect audio requirement from any audio node type', () => {
+      const audioNodeTypes = ['audio_input', 'audio_fft_bands', 'audio_beat', 'audio_volume'];
+      
+      for (const nodeType of audioNodeTypes) {
+        const nodes: NodeInstance[] = [
+          { id: 'audio', type: nodeType, position: { x: 0, y: 0 }, params: {} },
+          { id: 'out', type: 'output', position: { x: 100, y: 0 }, params: {} },
+        ];
+        
+        const result = generateGLSL(nodes, []);
+        expect(result.requiresAudio).toBe(true);
+      }
+    });
   });
 
   describe('generateHLSL', () => {

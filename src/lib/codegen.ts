@@ -11,6 +11,8 @@ export interface CodeGenResult {
   error?: string;
   errorNodeId?: string;
   helpers?: string[];
+  /** Whether the shader requires audio uniforms */
+  requiresAudio?: boolean;
 }
 
 /**
@@ -173,6 +175,12 @@ export function generateGLSL(nodes: NodeInstance[], edges: Edge[]): CodeGenResul
     return { success: false, error: 'No output node found' };
   }
   
+  // Check if any nodes require audio
+  const requiresAudio = nodes.some(n => {
+    const def = getNodeDef(n.type);
+    return def?.requiresAudio === true;
+  });
+  
   // Topological sort
   const sorted = topologicalSort(nodes, edges);
   if (!sorted) {
@@ -282,13 +290,28 @@ export function generateGLSL(nodes: NodeInstance[], edges: Edge[]): CodeGenResul
     .map(name => getHelper(name))
     .filter((h): h is string => h !== undefined);
   
+  // Audio uniform declarations (only included if audio nodes are used)
+  const audioUniforms = requiresAudio ? `
+// Audio uniforms
+uniform float u_audio_volume;
+uniform float u_audio_peak;
+uniform float u_audio_rms;
+uniform float u_audio_bass;
+uniform float u_audio_mid;
+uniform float u_audio_treble;
+uniform float u_audio_fft[8];
+uniform float u_audio_beat;
+uniform float u_audio_beat_raw;
+uniform float u_audio_bpm;
+` : '';
+
   const shader = `#version 300 es
 precision highp float;
 
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
-
+${audioUniforms}
 out vec4 fragColor;
 
 ${resolvedHelpers.join('\n\n')}
@@ -303,6 +326,7 @@ ${lines.join('\n')}
     success: true,
     code: shader,
     helpers: helperNames,
+    requiresAudio,
   };
 }
 
