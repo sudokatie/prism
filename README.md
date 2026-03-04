@@ -79,6 +79,16 @@ Open [http://localhost:3000](http://localhost:3000) to start creating.
 - **Sharpen** - Edge enhancement
 - **Vignette** - Darken edges
 
+### Audio Nodes (new in v0.4)
+Create audio-reactive visuals using microphone input:
+
+- **Audio Input** - Microphone input with volume/bass/mid/treble outputs
+- **FFT Bands** - 8-band frequency analysis (sub-bass to air)
+- **Beat Detector** - Beat detection with decay and BPM estimation
+- **Volume** - Level/peak/RMS outputs with gain control
+
+Audio nodes require microphone permission. Click the audio enable button in the toolbar to start.
+
 ### Output
 - **Output** - Final color (required)
 
