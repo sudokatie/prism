@@ -6,6 +6,7 @@
 import { useCallback, useState } from 'react';
 import { usePrismStore, selectProjectName, selectIsModified } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
+import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
 import { PresetBrowser } from './PresetBrowser';
 
 interface ButtonProps {
@@ -116,10 +117,20 @@ export function Toolbar() {
   const projectName = usePrismStore(selectProjectName);
   const isModified = usePrismStore(selectIsModified);
   const { newProject, setProjectName } = usePrismStore();
-  const { code } = useCompiler();
+  const { code, requiresAudio } = useCompiler();
+  const audio = useAudioAnalyzer();
 
   const [showExport, setShowExport] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+
+  // Toggle audio
+  const handleToggleAudio = useCallback(() => {
+    if (audio.enabled) {
+      audio.stop();
+    } else {
+      audio.start();
+    }
+  }, [audio]);
 
   // New project
   const handleNew = useCallback(() => {
@@ -204,6 +215,40 @@ export function Toolbar() {
           <Button onClick={handleSave}>Save</Button>
           <Button onClick={handleExport} variant="primary">Export GLSL</Button>
         </div>
+
+        {/* Audio control (only shown when audio nodes are used) */}
+        {requiresAudio && (
+          <>
+            <div className="h-6 w-px bg-gray-700" />
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleToggleAudio} 
+                variant={audio.enabled ? 'danger' : 'default'}
+              >
+                {audio.enabled ? '🎤 Stop Audio' : '🎤 Enable Audio'}
+              </Button>
+              {audio.enabled && (
+                <div className="flex items-center gap-1">
+                  <div 
+                    className="w-2 h-4 bg-green-500 rounded-sm transition-all"
+                    style={{ opacity: 0.3 + audio.bass * 0.7 }}
+                  />
+                  <div 
+                    className="w-2 h-4 bg-yellow-500 rounded-sm transition-all"
+                    style={{ opacity: 0.3 + audio.mid * 0.7 }}
+                  />
+                  <div 
+                    className="w-2 h-4 bg-red-500 rounded-sm transition-all"
+                    style={{ opacity: 0.3 + audio.treble * 0.7 }}
+                  />
+                </div>
+              )}
+              {audio.error && (
+                <span className="text-red-400 text-xs">{audio.error}</span>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />

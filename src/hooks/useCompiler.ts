@@ -9,6 +9,7 @@ export interface UseCompilerResult {
   code: string | null;
   error: string | null;
   errorNodeId: string | null;
+  requiresAudio: boolean;
   compile: () => void;
 }
 
@@ -28,6 +29,7 @@ export function useCompiler(): UseCompilerResult {
   const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorNodeId, setErrorNodeId] = useState<string | null>(null);
+  const [requiresAudio, setRequiresAudio] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -39,6 +41,7 @@ export function useCompiler(): UseCompilerResult {
       setCode(null);
       setError(null);
       setErrorNodeId(null);
+      setRequiresAudio(false);
       return;
     }
 
@@ -48,10 +51,12 @@ export function useCompiler(): UseCompilerResult {
       setCode(result.code);
       setError(null);
       setErrorNodeId(null);
+      setRequiresAudio(result.requiresAudio ?? false);
     } else {
       setCode(null);
       setError(result.error || 'Unknown compilation error');
       setErrorNodeId(result.errorNodeId || null);
+      setRequiresAudio(false);
     }
   }, [nodes, edges]);
 
@@ -85,6 +90,7 @@ export function useCompiler(): UseCompilerResult {
     code,
     error,
     errorNodeId,
+    requiresAudio,
     compile,
   };
 }

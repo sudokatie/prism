@@ -1,7 +1,7 @@
 // Shader export utilities
 
-import { NodeInstance, Edge, AnimationData, AnimationTrack, Keyframe, InterpolationMode } from './types';
-import { generateGLSL, CodeGenResult } from './codegen';
+import type { NodeInstance, Edge, AnimationData } from './types';
+import { generateGLSL } from './codegen';
 import { getHelper } from './noise';
 
 export interface ExportOptions {

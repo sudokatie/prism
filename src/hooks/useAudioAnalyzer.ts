@@ -96,7 +96,8 @@ export function useAudioAnalyzer(config: AudioAnalyzerConfig = {}) {
     
     if (!analyzer || !dataArray) return;
     
-    analyzer.getByteFrequencyData(dataArray);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    analyzer.getByteFrequencyData(dataArray as any);
     
     const bufferLength = analyzer.frequencyBinCount;
     
