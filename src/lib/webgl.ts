@@ -6,6 +6,17 @@ export interface Uniforms {
   u_time: number;
   u_resolution: [number, number];
   u_mouse: [number, number];
+  // Audio uniforms (optional)
+  u_audio_volume?: number;
+  u_audio_peak?: number;
+  u_audio_rms?: number;
+  u_audio_bass?: number;
+  u_audio_mid?: number;
+  u_audio_treble?: number;
+  u_audio_fft?: number[];
+  u_audio_beat?: number;
+  u_audio_beat_raw?: number;
+  u_audio_bpm?: number;
 }
 
 export interface Renderer {
@@ -37,6 +48,17 @@ export function createRenderer(): Renderer {
   let uTime: WebGLUniformLocation | null = null;
   let uResolution: WebGLUniformLocation | null = null;
   let uMouse: WebGLUniformLocation | null = null;
+  // Audio uniform locations
+  let uAudioVolume: WebGLUniformLocation | null = null;
+  let uAudioPeak: WebGLUniformLocation | null = null;
+  let uAudioRms: WebGLUniformLocation | null = null;
+  let uAudioBass: WebGLUniformLocation | null = null;
+  let uAudioMid: WebGLUniformLocation | null = null;
+  let uAudioTreble: WebGLUniformLocation | null = null;
+  let uAudioFft: WebGLUniformLocation | null = null;
+  let uAudioBeat: WebGLUniformLocation | null = null;
+  let uAudioBeatRaw: WebGLUniformLocation | null = null;
+  let uAudioBpm: WebGLUniformLocation | null = null;
 
   function createShader(type: number, source: string): WebGLShader | null {
     if (!gl) return null;
@@ -153,6 +175,17 @@ export function createRenderer(): Renderer {
       uTime = gl.getUniformLocation(program, 'u_time');
       uResolution = gl.getUniformLocation(program, 'u_resolution');
       uMouse = gl.getUniformLocation(program, 'u_mouse');
+      // Audio uniform locations (may be null if not used in shader)
+      uAudioVolume = gl.getUniformLocation(program, 'u_audio_volume');
+      uAudioPeak = gl.getUniformLocation(program, 'u_audio_peak');
+      uAudioRms = gl.getUniformLocation(program, 'u_audio_rms');
+      uAudioBass = gl.getUniformLocation(program, 'u_audio_bass');
+      uAudioMid = gl.getUniformLocation(program, 'u_audio_mid');
+      uAudioTreble = gl.getUniformLocation(program, 'u_audio_treble');
+      uAudioFft = gl.getUniformLocation(program, 'u_audio_fft');
+      uAudioBeat = gl.getUniformLocation(program, 'u_audio_beat');
+      uAudioBeatRaw = gl.getUniformLocation(program, 'u_audio_beat_raw');
+      uAudioBpm = gl.getUniformLocation(program, 'u_audio_bpm');
 
       return { success: true };
     },
@@ -180,6 +213,37 @@ export function createRenderer(): Renderer {
       if (uMouse !== null) {
         gl.uniform2f(uMouse, uniforms.u_mouse[0], uniforms.u_mouse[1]);
       }
+      // Set audio uniforms (only if provided)
+      if (uAudioVolume !== null && uniforms.u_audio_volume !== undefined) {
+        gl.uniform1f(uAudioVolume, uniforms.u_audio_volume);
+      }
+      if (uAudioPeak !== null && uniforms.u_audio_peak !== undefined) {
+        gl.uniform1f(uAudioPeak, uniforms.u_audio_peak);
+      }
+      if (uAudioRms !== null && uniforms.u_audio_rms !== undefined) {
+        gl.uniform1f(uAudioRms, uniforms.u_audio_rms);
+      }
+      if (uAudioBass !== null && uniforms.u_audio_bass !== undefined) {
+        gl.uniform1f(uAudioBass, uniforms.u_audio_bass);
+      }
+      if (uAudioMid !== null && uniforms.u_audio_mid !== undefined) {
+        gl.uniform1f(uAudioMid, uniforms.u_audio_mid);
+      }
+      if (uAudioTreble !== null && uniforms.u_audio_treble !== undefined) {
+        gl.uniform1f(uAudioTreble, uniforms.u_audio_treble);
+      }
+      if (uAudioFft !== null && uniforms.u_audio_fft !== undefined) {
+        gl.uniform1fv(uAudioFft, uniforms.u_audio_fft);
+      }
+      if (uAudioBeat !== null && uniforms.u_audio_beat !== undefined) {
+        gl.uniform1f(uAudioBeat, uniforms.u_audio_beat);
+      }
+      if (uAudioBeatRaw !== null && uniforms.u_audio_beat_raw !== undefined) {
+        gl.uniform1f(uAudioBeatRaw, uniforms.u_audio_beat_raw);
+      }
+      if (uAudioBpm !== null && uniforms.u_audio_bpm !== undefined) {
+        gl.uniform1f(uAudioBpm, uniforms.u_audio_bpm);
+      }
 
       // Draw fullscreen quad
       gl.bindVertexArray(vao);
@@ -206,6 +270,17 @@ export function createRenderer(): Renderer {
       uTime = null;
       uResolution = null;
       uMouse = null;
+      // Clear audio uniforms
+      uAudioVolume = null;
+      uAudioPeak = null;
+      uAudioRms = null;
+      uAudioBass = null;
+      uAudioMid = null;
+      uAudioTreble = null;
+      uAudioFft = null;
+      uAudioBeat = null;
+      uAudioBeatRaw = null;
+      uAudioBpm = null;
     }
   };
 }
