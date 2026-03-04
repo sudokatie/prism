@@ -11,8 +11,8 @@ describe('Node Registry', () => {
     it('should return all nodes', () => {
       const nodes = getAllNodeDefs();
       expect(nodes.length).toBeGreaterThan(0);
-      // 4 input + 18 math + 4 pattern + 10 color + 9 distortion + 1 output = 46
-      expect(nodes.length).toBe(46);
+      // 4 input + 18 math + 4 pattern + 10 color + 9 distortion + 4 audio + 1 output = 50
+      expect(nodes.length).toBe(50);
     });
 
     it('should include nodes from all categories', () => {
@@ -75,6 +75,13 @@ describe('Node Registry', () => {
       expect(nodes.length).toBe(1);
     });
 
+    it('should return all audio nodes', () => {
+      const nodes = getNodesByCategory('audio');
+      expect(nodes.length).toBe(4); // AudioInput, FFTBands, BeatDetector, Volume
+      expect(nodes.every(n => n.category === 'audio')).toBe(true);
+      expect(nodes.every(n => n.requiresAudio === true)).toBe(true);
+    });
+
     it('should return empty array for unknown category', () => {
       const nodes = getNodesByCategory('nonexistent');
       expect(nodes.length).toBe(0);
@@ -84,12 +91,13 @@ describe('Node Registry', () => {
   describe('getCategories', () => {
     it('should return all unique categories', () => {
       const categories = getCategories();
-      expect(categories.length).toBe(6);
+      expect(categories.length).toBe(7);
       expect(categories).toContain('input');
       expect(categories).toContain('math');
       expect(categories).toContain('pattern');
       expect(categories).toContain('color');
       expect(categories).toContain('distortion');
+      expect(categories).toContain('audio');
       expect(categories).toContain('output');
     });
   });

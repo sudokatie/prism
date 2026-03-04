@@ -7,6 +7,7 @@ import { NoiseNode, CircleNode, CheckerNode, GradientNode } from './PatternNodes
 import { RGBNode, HSVToRGBNode, BlendNode, LevelsNode, BrightnessContrastNode, ColorBalanceNode, VibranceNode, PosterizeNode } from './ColorNodes';
 import { DistortionNodes } from './DistortionNodes';
 import { BlurNodes } from './BlurNodes';
+import { audioNodes } from './AudioNodes';
 import { OutputNode } from './OutputNode';
 
 // All available nodes
@@ -36,6 +37,8 @@ const allNodes: NodeDef[] = [
   ...DistortionNodes,
   // Blur/effect nodes
   ...BlurNodes,
+  // Audio nodes
+  ...audioNodes,
   // Output nodes
   OutputNode,
 ];
@@ -101,4 +104,5 @@ export * from './PatternNodes';
 export * from './ColorNodes';
 export * from './DistortionNodes';
 export * from './BlurNodes';
+export * from './AudioNodes';
 export * from './OutputNode';

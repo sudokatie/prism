@@ -20,12 +20,14 @@ export interface ParamDef {
 export interface NodeDef {
   type: string;
   label: string;
-  category: 'input' | 'math' | 'pattern' | 'color' | 'distortion' | 'output';
+  category: 'input' | 'math' | 'pattern' | 'color' | 'distortion' | 'audio' | 'output';
   inputs: PortDef[];
   outputs: PortDef[];
   params: ParamDef[];
   generateCode: (inputs: Record<string, string>, params: Record<string, unknown>) => Record<string, string>;
   helpers?: string[];
+  /** Audio nodes require special uniform injection */
+  requiresAudio?: boolean;
 }
 
 export interface NodeInstance {
