@@ -1,7 +1,7 @@
 // Shader export utilities
 
 import type { NodeInstance, Edge, AnimationData } from './types';
-import { generateGLSL } from './codegen';
+import { generateGLSL, generateShadertoy } from './codegen';
 import { getHelper } from './noise';
 
 export interface ExportOptions {
@@ -298,4 +298,22 @@ uniform vec2 u_mouse;
 ${helpers}
 
 ${result.code}`;
+}
+
+/**
+ * Export shader in Shadertoy-compatible format.
+ * 
+ * Shadertoy uses different conventions:
+ * - iResolution (vec3), iTime (float), iMouse (vec4) uniforms
+ * - mainImage(out vec4 fragColor, in vec2 fragCoord) signature
+ * 
+ * Output can be pasted directly into https://www.shadertoy.com/new
+ */
+export function exportShadertoy(nodes: NodeInstance[], edges: Edge[]): string {
+  const result = generateShadertoy(nodes, edges);
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to generate Shadertoy shader');
+  }
+  
+  return result.code!;
 }

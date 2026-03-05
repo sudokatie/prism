@@ -172,10 +172,13 @@ uniform vec2 u_mouse;      // Mouse position (0-1)
 ### Export Formats
 
 - **GLSL** - WebGL 2.0 fragment shader (default)
-- **HLSL** - DirectX pixel shader (new in v0.2)
-- **Metal** - Apple Metal fragment shader (new in v0.2)
+- **HLSL** - DirectX pixel shader
+- **Metal** - Apple Metal fragment shader
+- **Shadertoy** - Ready to paste into shadertoy.com
 
 HLSL and Metal exports handle all type conversions (vec2 -> float2, fract -> frac, etc.) and generate proper shader structures for each platform.
+
+Shadertoy export converts uniforms to Shadertoy conventions (iResolution, iTime, iMouse) and uses the mainImage function signature. Copy the output and paste directly into https://www.shadertoy.com/new.
 
 ## License
 
