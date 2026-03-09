@@ -15,15 +15,25 @@ import { usePrismStore } from '@/lib/store';
 import { useCompiler } from '@/hooks/useCompiler';
 import { useAnimation } from '@/hooks/useAnimation';
 import { getNodeDef } from '@/components/nodes';
+import { parseShareParam, clearShareParam } from '@/lib/share';
 
 export default function Home() {
-  const { removeNode, selectedNodeId, selectNode, nodes } = usePrismStore();
+  const { removeNode, selectedNodeId, selectNode, nodes, loadProject } = usePrismStore();
   const addNode = usePrismStore((state) => state.addNode);
   const { errorNodeId } = useCompiler();
   
   // Animation state
   const [timelineVisible, setTimelineVisible] = useState(false);
   const animation = useAnimation(10);
+  
+  // Check for shared project in URL on mount
+  useEffect(() => {
+    const sharedProject = parseShareParam();
+    if (sharedProject) {
+      loadProject(sharedProject);
+      clearShareParam();
+    }
+  }, [loadProject]);
   
   // Build node labels map for timeline
   const nodeLabels = useMemo(() => {

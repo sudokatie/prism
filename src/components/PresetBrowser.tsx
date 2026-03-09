@@ -8,6 +8,7 @@ const CATEGORY_LABELS: Record<PresetCategory, string> = {
   patterns: 'Patterns',
   effects: 'Effects',
   generators: 'Generators',
+  audio: 'Audio',
 };
 
 interface PresetBrowserProps {

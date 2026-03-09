@@ -8,6 +8,7 @@ import { usePrismStore, selectProjectName, selectIsModified } from '@/lib/store'
 import { useCompiler } from '@/hooks/useCompiler';
 import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
 import { PresetBrowser } from './PresetBrowser';
+import { ShareModal } from './ShareModal';
 
 interface ButtonProps {
   onClick: () => void;
@@ -122,6 +123,7 @@ export function Toolbar() {
 
   const [showExport, setShowExport] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   // Toggle audio
   const handleToggleAudio = useCallback(() => {
@@ -214,6 +216,7 @@ export function Toolbar() {
           <Button onClick={handleLoad}>Load</Button>
           <Button onClick={handleSave}>Save</Button>
           <Button onClick={handleExport} variant="primary">Export GLSL</Button>
+          <Button onClick={() => setShowShare(true)}>Share</Button>
         </div>
 
         {/* Audio control (only shown when audio nodes are used) */}
@@ -270,6 +273,13 @@ export function Toolbar() {
       {showPresets && (
         <PresetBrowser onClose={() => setShowPresets(false)} />
       )}
+
+      {/* Share modal */}
+      <ShareModal
+        project={usePrismStore.getState().getProject()}
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+      />
     </>
   );
 }
