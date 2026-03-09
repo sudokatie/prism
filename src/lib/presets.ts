@@ -4,7 +4,7 @@
 import type { Project, NodeInstance, Edge } from './types';
 import { PROJECT_VERSION } from './project';
 
-export type PresetCategory = 'patterns' | 'effects' | 'generators';
+export type PresetCategory = 'patterns' | 'effects' | 'generators' | 'audio';
 
 export interface Preset {
   id: string;
@@ -390,6 +390,163 @@ const vignetteGlow: Preset = {
 };
 
 /**
+ * Bass Pulse - pulses based on bass frequencies
+ */
+const bassPulse: Preset = {
+  id: 'bass-pulse',
+  name: 'Bass Pulse',
+  description: 'Pulsing circles driven by bass frequencies',
+  category: 'audio',
+  project: {
+    version: PROJECT_VERSION,
+    name: 'Bass Pulse',
+    nodes: [
+      { id: 'uv', type: 'UV', position: { x: 50, y: 100 }, params: {} },
+      { id: 'audio', type: 'AudioInput', position: { x: 50, y: 250 }, params: { smoothing: 0.8, gain: 1.0 } },
+      { id: 'circle', type: 'Circle', position: { x: 250, y: 100 }, params: { radius: 0.3, softness: 0.2 } },
+      { id: 'mul', type: 'Multiply', position: { x: 450, y: 150 }, params: {} },
+      { id: 'hsv', type: 'HSVtoRGB', position: { x: 650, y: 150 }, params: {} },
+      { id: 'output', type: 'Output', position: { x: 850, y: 150 }, params: {} },
+    ],
+    edges: [
+      { id: 'e1', source: 'uv', sourceHandle: 'uv', target: 'circle', targetHandle: 'uv' },
+      { id: 'e2', source: 'audio', sourceHandle: 'bass', target: 'circle', targetHandle: 'radius' },
+      { id: 'e3', source: 'circle', sourceHandle: 'value', target: 'mul', targetHandle: 'a' },
+      { id: 'e4', source: 'audio', sourceHandle: 'volume', target: 'mul', targetHandle: 'b' },
+      { id: 'e5', source: 'mul', sourceHandle: 'result', target: 'hsv', targetHandle: 'h' },
+      { id: 'e6', source: 'audio', sourceHandle: 'bass', target: 'hsv', targetHandle: 'v' },
+      { id: 'e7', source: 'hsv', sourceHandle: 'rgb', target: 'output', targetHandle: 'color' },
+    ],
+  },
+};
+
+/**
+ * Spectrum Bars - visualizes FFT bands as color gradient
+ */
+const spectrumBars: Preset = {
+  id: 'spectrum-bars',
+  name: 'Spectrum Bars',
+  description: 'Frequency spectrum visualization with color mapping',
+  category: 'audio',
+  project: {
+    version: PROJECT_VERSION,
+    name: 'Spectrum Bars',
+    nodes: [
+      { id: 'uv', type: 'UV', position: { x: 50, y: 100 }, params: {} },
+      { id: 'fft', type: 'FFTBands', position: { x: 50, y: 250 }, params: {} },
+      { id: 'add1', type: 'Add', position: { x: 250, y: 100 }, params: {} },
+      { id: 'add2', type: 'Add', position: { x: 250, y: 200 }, params: {} },
+      { id: 'add3', type: 'Add', position: { x: 450, y: 150 }, params: {} },
+      { id: 'gradient', type: 'Gradient', position: { x: 650, y: 150 }, params: {} },
+      { id: 'output', type: 'Output', position: { x: 850, y: 150 }, params: {} },
+    ],
+    edges: [
+      { id: 'e1', source: 'fft', sourceHandle: 'band0', target: 'add1', targetHandle: 'a' },
+      { id: 'e2', source: 'fft', sourceHandle: 'band1', target: 'add1', targetHandle: 'b' },
+      { id: 'e3', source: 'fft', sourceHandle: 'band2', target: 'add2', targetHandle: 'a' },
+      { id: 'e4', source: 'fft', sourceHandle: 'band3', target: 'add2', targetHandle: 'b' },
+      { id: 'e5', source: 'add1', sourceHandle: 'result', target: 'add3', targetHandle: 'a' },
+      { id: 'e6', source: 'add2', sourceHandle: 'result', target: 'add3', targetHandle: 'b' },
+      { id: 'e7', source: 'add3', sourceHandle: 'result', target: 'gradient', targetHandle: 't' },
+      { id: 'e8', source: 'gradient', sourceHandle: 'color', target: 'output', targetHandle: 'color' },
+    ],
+  },
+};
+
+/**
+ * Beat Flash - flashes on beat detection
+ */
+const beatFlash: Preset = {
+  id: 'beat-flash',
+  name: 'Beat Flash',
+  description: 'Stroboscopic flash synced to beat detection',
+  category: 'audio',
+  project: {
+    version: PROJECT_VERSION,
+    name: 'Beat Flash',
+    nodes: [
+      { id: 'beat', type: 'BeatDetector', position: { x: 50, y: 100 }, params: { decay: 0.9 } },
+      { id: 'time', type: 'Time', position: { x: 50, y: 250 }, params: {} },
+      { id: 'mul', type: 'Multiply', position: { x: 250, y: 100 }, params: {} },
+      { id: 'hsv', type: 'HSVtoRGB', position: { x: 450, y: 100 }, params: {} },
+      { id: 'output', type: 'Output', position: { x: 650, y: 100 }, params: {} },
+    ],
+    edges: [
+      { id: 'e1', source: 'beat', sourceHandle: 'beat', target: 'mul', targetHandle: 'a' },
+      { id: 'e2', source: 'time', sourceHandle: 'time', target: 'hsv', targetHandle: 'h' },
+      { id: 'e3', source: 'mul', sourceHandle: 'result', target: 'hsv', targetHandle: 'v' },
+      { id: 'e4', source: 'hsv', sourceHandle: 'rgb', target: 'output', targetHandle: 'color' },
+    ],
+  },
+};
+
+/**
+ * Audio Wave - modulates wave pattern based on volume
+ */
+const audioWave: Preset = {
+  id: 'audio-wave',
+  name: 'Audio Wave',
+  description: 'Wave distortion driven by audio volume',
+  category: 'audio',
+  project: {
+    version: PROJECT_VERSION,
+    name: 'Audio Wave',
+    nodes: [
+      { id: 'uv', type: 'UV', position: { x: 50, y: 100 }, params: {} },
+      { id: 'volume', type: 'Volume', position: { x: 50, y: 250 }, params: {} },
+      { id: 'time', type: 'Time', position: { x: 50, y: 400 }, params: {} },
+      { id: 'wave', type: 'Wave', position: { x: 250, y: 100 }, params: { amplitude: 0.1, frequency: 8 } },
+      { id: 'noise', type: 'Noise', position: { x: 450, y: 100 }, params: { scale: 3 } },
+      { id: 'mul', type: 'Multiply', position: { x: 650, y: 150 }, params: {} },
+      { id: 'gradient', type: 'Gradient', position: { x: 850, y: 150 }, params: {} },
+      { id: 'output', type: 'Output', position: { x: 1050, y: 150 }, params: {} },
+    ],
+    edges: [
+      { id: 'e1', source: 'uv', sourceHandle: 'uv', target: 'wave', targetHandle: 'uv' },
+      { id: 'e2', source: 'volume', sourceHandle: 'level', target: 'wave', targetHandle: 'amplitude' },
+      { id: 'e3', source: 'time', sourceHandle: 'time', target: 'wave', targetHandle: 'time' },
+      { id: 'e4', source: 'wave', sourceHandle: 'result', target: 'noise', targetHandle: 'uv' },
+      { id: 'e5', source: 'noise', sourceHandle: 'value', target: 'mul', targetHandle: 'a' },
+      { id: 'e6', source: 'volume', sourceHandle: 'peak', target: 'mul', targetHandle: 'b' },
+      { id: 'e7', source: 'mul', sourceHandle: 'result', target: 'gradient', targetHandle: 't' },
+      { id: 'e8', source: 'gradient', sourceHandle: 'color', target: 'output', targetHandle: 'color' },
+    ],
+  },
+};
+
+/**
+ * Frequency Rainbow - maps FFT bands to rainbow colors
+ */
+const frequencyRainbow: Preset = {
+  id: 'frequency-rainbow',
+  name: 'Frequency Rainbow',
+  description: 'Rainbow visualization driven by frequency bands',
+  category: 'audio',
+  project: {
+    version: PROJECT_VERSION,
+    name: 'Frequency Rainbow',
+    nodes: [
+      { id: 'uv', type: 'UV', position: { x: 50, y: 100 }, params: {} },
+      { id: 'audio', type: 'AudioInput', position: { x: 50, y: 300 }, params: { smoothing: 0.7, gain: 1.2 } },
+      { id: 'time', type: 'Time', position: { x: 50, y: 450 }, params: {} },
+      { id: 'sin', type: 'Sin', position: { x: 250, y: 100 }, params: {} },
+      { id: 'add', type: 'Add', position: { x: 450, y: 100 }, params: {} },
+      { id: 'hsv', type: 'HSVtoRGB', position: { x: 650, y: 150 }, params: {} },
+      { id: 'output', type: 'Output', position: { x: 850, y: 150 }, params: {} },
+    ],
+    edges: [
+      { id: 'e1', source: 'uv', sourceHandle: 'uv', target: 'sin', targetHandle: 'a' },
+      { id: 'e2', source: 'sin', sourceHandle: 'result', target: 'add', targetHandle: 'a' },
+      { id: 'e3', source: 'time', sourceHandle: 'time', target: 'add', targetHandle: 'b' },
+      { id: 'e4', source: 'add', sourceHandle: 'result', target: 'hsv', targetHandle: 'h' },
+      { id: 'e5', source: 'audio', sourceHandle: 'treble', target: 'hsv', targetHandle: 's' },
+      { id: 'e6', source: 'audio', sourceHandle: 'volume', target: 'hsv', targetHandle: 'v' },
+      { id: 'e7', source: 'hsv', sourceHandle: 'rgb', target: 'output', targetHandle: 'color' },
+    ],
+  },
+};
+
+/**
  * All built-in presets
  */
 export const PRESETS: Preset[] = [
@@ -405,6 +562,11 @@ export const PRESETS: Preset[] = [
   gradientFlow,
   twist,
   vignetteGlow,
+  bassPulse,
+  spectrumBars,
+  beatFlash,
+  audioWave,
+  frequencyRainbow,
 ];
 
 /**
@@ -432,7 +594,7 @@ export function getPresetById(id: string): Preset | undefined {
  * Get all categories with counts
  */
 export function getCategories(): { category: PresetCategory; count: number }[] {
-  const categories: PresetCategory[] = ['patterns', 'effects', 'generators'];
+  const categories: PresetCategory[] = ['patterns', 'effects', 'generators', 'audio'];
   return categories.map(category => ({
     category,
     count: getPresetsByCategory(category).length,

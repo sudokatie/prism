@@ -61,12 +61,13 @@ describe('getPresetById', () => {
 describe('getCategories', () => {
   it('should return all categories with counts', () => {
     const categories = getCategories();
-    expect(categories).toHaveLength(3);
+    expect(categories).toHaveLength(4);
 
     const names = categories.map(c => c.category);
     expect(names).toContain('patterns');
     expect(names).toContain('effects');
     expect(names).toContain('generators');
+    expect(names).toContain('audio');
   });
 
   it('should have accurate counts', () => {
@@ -85,7 +86,7 @@ describe('preset structure', () => {
       expect(typeof preset.name).toBe('string');
       expect(preset.description).toBeTruthy();
       expect(typeof preset.description).toBe('string');
-      expect(['patterns', 'effects', 'generators']).toContain(preset.category);
+      expect(['patterns', 'effects', 'generators', 'audio']).toContain(preset.category);
       expect(preset.project).toBeDefined();
     });
   });
