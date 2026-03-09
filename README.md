@@ -7,7 +7,7 @@ Visual shader programming for generative art. Create stunning shaders without wr
 - Node-based visual editor for shader creation
 - Real-time WebGL 2.0 preview at 60fps
 - 46 built-in nodes (input, math, pattern, color, distortion, output)
-- Preset library with 12 ready-to-use shaders
+- Preset library with 17 ready-to-use shaders (including 5 audio-reactive)
 - Type-safe connections with automatic conversions
 - Export to GLSL, HLSL, and Metal
 - Save/load projects as JSON
@@ -94,7 +94,7 @@ Audio nodes require microphone permission. Click the audio enable button in the 
 
 ## Preset Library (new in v0.3)
 
-Click "Presets" in the toolbar to browse 12 built-in shader presets organized by category:
+Click "Presets" in the toolbar to browse 17 built-in shader presets organized by category:
 
 ### Patterns
 - **Plasma Wave** - Classic demoscene effect with animated color waves
@@ -113,6 +113,13 @@ Click "Presets" in the toolbar to browse 12 built-in shader presets organized by
 - **Fractal Noise** - Multi-octave fractal brownian motion
 - **Voronoi Cells** - Animated cellular pattern with color
 - **Gradient Flow** - Smooth animated color gradient
+
+### Audio (new in v0.5)
+- **Bass Pulse** - Pulsing circles driven by bass frequencies
+- **Spectrum Bars** - Frequency spectrum visualization with color mapping
+- **Beat Flash** - Stroboscopic flash synced to beat detection
+- **Audio Wave** - Wave distortion driven by audio volume
+- **Frequency Rainbow** - Rainbow visualization driven by frequency bands
 
 Presets provide a starting point - modify and build upon them to create your own effects.
 
