@@ -41,42 +41,66 @@ function FloatInput({ param, value, onChange }: FloatInputProps) {
     [clamp, onChange]
   );
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only start drag on left click
-    if (e.button !== 0) return;
+  // Start drag (mouse or touch)
+  const startDrag = useCallback((clientX: number) => {
     setIsDragging(true);
-    dragStartRef.current = { x: e.clientX, startValue: value };
-    e.preventDefault();
+    dragStartRef.current = { x: clientX, startValue: value };
   }, [value]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    startDrag(e.clientX);
+    e.preventDefault();
+  }, [startDrag]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    startDrag(e.touches[0].clientX);
+  }, [startDrag]);
 
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, shiftKey: boolean, ctrlKey: boolean) => {
       if (!dragStartRef.current) return;
       
-      const deltaX = e.clientX - dragStartRef.current.x;
+      const deltaX = clientX - dragStartRef.current.x;
       
       // Determine increment based on modifier keys
       let increment = 0.1; // Normal
-      if (e.shiftKey) increment = 0.01; // Fine
-      if (e.ctrlKey || e.metaKey) increment = 1.0; // Coarse
+      if (shiftKey) increment = 0.01; // Fine
+      if (ctrlKey) increment = 1.0; // Coarse
       
       const newValue = dragStartRef.current.startValue + deltaX * increment;
       onChange(clamp(newValue));
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.shiftKey, e.ctrlKey || e.metaKey);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      handleMove(e.touches[0].clientX, false, false);
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
       dragStartRef.current = null;
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('touchcancel', handleEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
     };
   }, [isDragging, clamp, onChange]);
 
@@ -86,12 +110,14 @@ function FloatInput({ param, value, onChange }: FloatInputProps) {
       value={value}
       onChange={handleChange}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       step={0.1}
       min={param.min}
       max={param.max}
       className={`
-        w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded
-        text-white text-sm focus:outline-none focus:border-blue-500
+        w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded
+        text-white text-base focus:outline-none focus:border-blue-500
+        touch-manipulation
         ${isDragging ? 'cursor-ew-resize' : 'cursor-text'}
       `}
       style={{ cursor: isDragging ? 'ew-resize' : undefined }}
@@ -136,7 +162,7 @@ function ColorInput({ value, onChange }: ColorInputProps) {
       type="color"
       value={toHex(value)}
       onChange={handleChange}
-      className="w-full h-8 rounded cursor-pointer"
+      className="w-full h-10 rounded cursor-pointer touch-manipulation"
     />
   );
 }
@@ -163,8 +189,9 @@ function SelectInput({ param, value, onChange }: SelectInputProps) {
       value={value}
       onChange={handleChange}
       className="
-        w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded
-        text-white text-sm focus:outline-none focus:border-blue-500
+        w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded
+        text-white text-base focus:outline-none focus:border-blue-500
+        touch-manipulation
       "
     >
       {param.options?.map((option) => {
@@ -197,16 +224,16 @@ function ParamRow({ param, value, onChange, onAnimate, isAnimated }: ParamRowPro
   const isAnimatable = ['float', 'vec2', 'vec3', 'vec4', 'color'].includes(param.type);
   
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs text-gray-400 capitalize">{param.name}</label>
+        <label className="text-sm text-gray-400 capitalize">{param.name}</label>
         {isAnimatable && onAnimate && (
           <button
             onClick={onAnimate}
-            className={`text-xs px-1.5 py-0.5 rounded ${
+            className={`text-sm px-2.5 py-1 rounded touch-manipulation min-h-[32px] ${
               isAnimated
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 active:bg-gray-500'
             }`}
             title={isAnimated ? 'Add keyframe at current time' : 'Add to animation'}
           >
@@ -253,8 +280,9 @@ function ParamRow({ param, value, onChange, onAnimate, isAnimated }: ParamRowPro
               }}
               placeholder={axis}
               className="
-                flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded
-                text-white text-sm focus:outline-none focus:border-blue-500
+                flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded
+                text-white text-base focus:outline-none focus:border-blue-500
+                touch-manipulation
               "
             />
           ))}
@@ -276,8 +304,9 @@ function ParamRow({ param, value, onChange, onAnimate, isAnimated }: ParamRowPro
               }}
               placeholder={axis}
               className="
-                flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded
-                text-white text-sm focus:outline-none focus:border-blue-500
+                flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded
+                text-white text-base focus:outline-none focus:border-blue-500
+                touch-manipulation
               "
             />
           ))}

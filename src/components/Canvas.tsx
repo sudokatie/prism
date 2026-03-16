@@ -156,7 +156,7 @@ function CanvasInner({ errorNodeId }: CanvasProps) {
   );
 
   return (
-    <div className="w-full h-full bg-gray-900">
+    <div className="w-full h-full bg-gray-900 touch-none">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -173,9 +173,19 @@ function CanvasInner({ errorNodeId }: CanvasProps) {
           style: { stroke: '#4299e1', strokeWidth: 2 },
           type: 'default',
         }}
+        // Touch support configuration
+        panOnScroll={false}
+        panOnDrag={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        selectNodesOnDrag={false}
+        // Mobile-friendly zoom limits
+        minZoom={0.25}
+        maxZoom={2}
       >
         <Background color="#374151" gap={15} />
-        <Controls />
+        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );
