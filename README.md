@@ -11,6 +11,7 @@ Visual shader programming for generative art. Create stunning shaders without wr
 - Type-safe connections with automatic conversions
 - Export to GLSL, HLSL, and Metal
 - Save/load projects as JSON
+- Touch-friendly UI for tablets and mobile devices
 
 ## Quick Start
 
